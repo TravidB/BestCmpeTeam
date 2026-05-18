@@ -46,6 +46,28 @@ def startup():
             except Exception:
                 pass  # Column already exists
 
+        # Create lookup tables used by booking validation (not managed by ORM)
+        for create_sql in [
+            """CREATE TABLE IF NOT EXISTS Airline_Master (
+                Airline_Code TEXT PRIMARY KEY,
+                Airline_Name TEXT
+            )""",
+            """CREATE TABLE IF NOT EXISTS Airport_Master (
+                Airport_Code TEXT PRIMARY KEY,
+                Airport_Name TEXT,
+                City TEXT,
+                Country TEXT
+            )""",
+            """CREATE TABLE IF NOT EXISTS Hotel_Master (
+                Hotel_Code INTEGER PRIMARY KEY,
+                Hotel_Name TEXT,
+                City TEXT,
+                Country TEXT
+            )""",
+        ]:
+            conn.execute(text(create_sql))
+        conn.commit()
+
         # Seed default admin if none exists
         result = conn.execute(
             text("SELECT COUNT(*) FROM users WHERE Is_Admin = 1")
