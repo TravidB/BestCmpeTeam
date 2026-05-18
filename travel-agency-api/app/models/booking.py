@@ -23,6 +23,8 @@ class User(Base):
     Last_Name = Column(String, nullable=False)
     Email = Column(String, unique=True, nullable=False, index=True)
     Phone_Number = Column(String)
+    Password_Hash = Column(String, nullable=True)
+    Is_Admin = Column(Boolean, default=False, nullable=False)
 
     # Relationship back to Bookings
     bookings = relationship("Booking", back_populates="user")

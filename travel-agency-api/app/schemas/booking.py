@@ -109,6 +109,26 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
+class UserCreate(BaseModel):
+    First_Name: str
+    Last_Name: str
+    Email: EmailStr
+    Phone_Number: Optional[str] = None
+    Password: str
+
+
+class AdminUserResponse(BaseModel):
+    User_ID: int
+    First_Name: str
+    Last_Name: str
+    Email: EmailStr
+    Phone_Number: Optional[str] = None
+    Is_Admin: bool
+
+    class Config:
+        from_attributes = True
+
 # Advanced Response schema including User information
 class BookingDetailResponse(BookingResponse):
     user: UserResponse

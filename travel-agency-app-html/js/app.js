@@ -61,36 +61,77 @@ function updateAuthUI() {
     show($('user-badge'))
     show($('trips-nav-btn'))
     hide($('signed-in-badge-empty'))
+    const adminLink = $('admin-nav-btn')
+    if (adminLink) auth.isAdmin() ? show(adminLink) : hide(adminLink)
   } else {
     $('btn-signin').textContent = 'Sign In'
     hide($('user-badge'))
     hide($('trips-nav-btn'))
+    const adminLink = $('admin-nav-btn')
+    if (adminLink) hide(adminLink)
   }
   const badge = $('signed-in-badge')
   if (badge) { badge.textContent = loggedIn ? `Signed in as ${email}` : ''; loggedIn ? show(badge) : hide(badge) }
 }
 
-function openAuthModal() { show($('auth-overlay')); $('auth-email').focus() }
-function closeAuthModal() { hide($('auth-overlay')); $('auth-error').textContent = '' }
+// Track which tab is active in the auth modal
+let authMode = 'signin'
+
+function openAuthModal() {
+  authMode = 'signin'
+  _applyAuthMode()
+  show($('auth-overlay'))
+  $('auth-email').focus()
+}
+function closeAuthModal() {
+  hide($('auth-overlay'))
+  $('auth-error').textContent = ''
+}
+function _applyAuthMode() {
+  const isReg = authMode === 'register'
+  $('auth-title').textContent = isReg ? 'Create Account' : 'Sign In'
+  $('btn-auth-submit').textContent = isReg ? 'Create Account' : 'Sign In'
+  $('auth-register-fields').classList.toggle('hidden', !isReg)
+  $('auth-toggle-link').textContent = isReg ? 'Already have an account? Sign In' : "Don't have an account? Register"
+  $('auth-error').textContent = ''
+}
 
 async function handleSignIn(e) {
   e.preventDefault()
   const email = $('auth-email').value.trim()
   const password = $('auth-password').value
-  $('auth-error').textContent = ''
-  if (!email) { $('auth-error').textContent = 'Enter your email.'; return }
-  if (!password) { $('auth-error').textContent = 'Enter your password.'; return }
+  const errEl = $('auth-error')
+  errEl.textContent = ''
+
+  if (authMode === 'register') {
+    const firstName = $('auth-first-name').value.trim()
+    const lastName = $('auth-last-name').value.trim()
+    if (!firstName || !lastName) { errEl.textContent = 'First and last name are required.'; return }
+    if (!email) { errEl.textContent = 'Enter your email.'; return }
+    if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return }
+    $('btn-auth-submit').disabled = true
+    $('btn-auth-submit').textContent = 'Creating account…'
+    const result = await auth.register({ firstName, lastName, email, phone: '', password })
+    $('btn-auth-submit').disabled = false
+    $('btn-auth-submit').textContent = 'Create Account'
+    if (result.success) { closeAuthModal(); updateAuthUI() }
+    else errEl.textContent = result.error
+    return
+  }
+
+  if (!email) { errEl.textContent = 'Enter your email.'; return }
+  if (!password) { errEl.textContent = 'Enter your password.'; return }
   $('btn-auth-submit').disabled = true
   $('btn-auth-submit').textContent = 'Signing in…'
-  try {
-    await auth.signIn(email, password)
+  const result = await auth.signIn(email, password)
+  $('btn-auth-submit').disabled = false
+  $('btn-auth-submit').textContent = 'Sign In'
+  if (result.success) {
     closeAuthModal()
     updateAuthUI()
-  } catch (err) {
-    $('auth-error').textContent = err.message || 'Sign in failed.'
-  } finally {
-    $('btn-auth-submit').disabled = false
-    $('btn-auth-submit').textContent = 'Sign In'
+    if (result.isAdmin) window.location.href = 'admin.html'
+  } else {
+    errEl.textContent = result.error
   }
 }
 
@@ -561,6 +602,10 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btn-auth-cancel').addEventListener('click', closeAuthModal)
   $('auth-overlay').addEventListener('click', (e) => { if (e.target === $('auth-overlay')) closeAuthModal() })
   $('auth-form').addEventListener('submit', handleSignIn)
+  $('auth-toggle-link').addEventListener('click', () => {
+    authMode = authMode === 'signin' ? 'register' : 'signin'
+    _applyAuthMode()
+  })
 
   // Search
   $('btn-search').addEventListener('click', handleSearch)

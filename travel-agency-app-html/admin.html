@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — TravelEase</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .admin-wrap { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+
+    .admin-hero { margin-bottom: 1.75rem; }
+    .admin-hero h1 { font-size: 1.75rem; font-weight: 800; color: var(--color-primary-dark); margin-bottom: .25rem; }
+    .admin-hero p { color: var(--color-text-muted); font-size: .9rem; }
+
+    .admin-stats {
+      display: flex; gap: 1rem; margin-bottom: 1.75rem; flex-wrap: wrap;
+    }
+    .stat-card {
+      background: #fff; border: 1px solid var(--color-border); border-radius: 12px;
+      padding: 1rem 1.5rem; min-width: 140px; flex: 1;
+    }
+    .stat-label { font-size: .75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .05em; color: var(--color-text-muted); margin-bottom: .35rem; }
+    .stat-value { font-size: 2rem; font-weight: 800; color: var(--color-primary); }
+
+    .admin-tabs-bar {
+      display: flex; align-items: center; gap: .5rem;
+      border-bottom: 1px solid var(--color-border); margin-bottom: 1.25rem;
+    }
+    .refresh-btn {
+      margin-left: auto; padding: .35rem .75rem; background: var(--color-primary-bg);
+      color: var(--color-primary); border: 1px solid var(--color-border); border-radius: 6px;
+      font-size: .8rem; font-weight: 600; cursor: pointer;
+    }
+    .refresh-btn:hover { background: var(--color-primary); color: #fff; }
+
+    .status-bar {
+      padding: .6rem 1rem; border-radius: 8px; font-size: .85rem;
+      margin-bottom: 1rem; background: var(--color-primary-bg); color: var(--color-primary);
+    }
+    .status-bar--error { background: #fff5f5; color: #c53030; }
+
+    .admin-table-wrap { overflow-x: auto; }
+    .admin-table {
+      width: 100%; border-collapse: collapse; font-size: .85rem;
+    }
+    .admin-table th {
+      text-align: left; padding: .6rem .9rem; font-size: .72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted);
+      background: var(--color-bg-subtle); border-bottom: 2px solid var(--color-border);
+    }
+    .admin-table td {
+      padding: .65rem .9rem; border-bottom: 1px solid var(--color-border);
+      color: var(--color-text); vertical-align: top;
+    }
+    .admin-table tr:hover td { background: var(--color-primary-bg); }
+    .admin-table tr.row--admin td { background: #fffbf0; }
+    .table-meta { font-size: .78rem; color: var(--color-text-muted); margin-top: .75rem; }
+
+    .role-badge {
+      display: inline-block; padding: .2rem .55rem; border-radius: 20px;
+      font-size: .7rem; font-weight: 700;
+    }
+    .role-badge--admin { background: #fef3c7; color: #92400e; }
+    .role-badge--user  { background: var(--color-primary-bg); color: var(--color-primary); }
+
+    /* Password prompt modal */
+    #pw-modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,.55);
+      display: none; align-items: center; justify-content: center; z-index: 300;
+    }
+    .pw-card {
+      background: #fff; border-radius: 14px; padding: 2rem;
+      width: min(400px, 90%); box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    }
+    .pw-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: .5rem; }
+    .pw-card p { color: var(--color-text-muted); font-size: .85rem; margin-bottom: 1.25rem; }
+    .pw-card input {
+      width: 100%; padding: .55rem .7rem; border: 1.5px solid var(--color-border);
+      border-radius: 8px; font-size: .9rem; margin-bottom: .75rem; box-sizing: border-box;
+    }
+    .pw-card input:focus { outline: none; border-color: var(--color-primary); }
+    .pw-actions { display: flex; gap: .5rem; justify-content: flex-end; }
+  </style>
+</head>
+<body>
+
+<!-- ══ Password Prompt Modal ══════════════════════════════════════════════ -->
+<div id="pw-modal">
+  <div class="pw-card">
+    <h3>⚙️ Admin Authentication</h3>
+    <p>Enter your admin password to load dashboard data.</p>
+    <form id="pw-form">
+      <input id="pw-input" type="password" placeholder="Admin password" autocomplete="current-password">
+      <div class="pw-actions">
+        <button id="pw-cancel" class="btn-cancel" type="button">Cancel</button>
+        <button class="btn-submit" type="submit">Unlock</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ Header ════════════════════════════════════════════════════════════ -->
+<header class="app-header">
+  <div class="app-header__inner">
+    <div class="brand">
+      <span class="brand-logo">⚙️</span>
+      <span class="brand-name">TravelEase Admin</span>
+    </div>
+    <nav class="nav">
+      <a href="index.html" class="nav-link">← Back to App</a>
+    </nav>
+    <div class="header-actions">
+      <span id="admin-email" class="user-badge"></span>
+      <button id="sign-out-btn" class="btn-signin">Sign Out</button>
+    </div>
+  </div>
+</header>
+
+<!-- ══ Admin Dashboard ════════════════════════════════════════════════════ -->
+<div class="admin-wrap">
+  <div class="admin-hero">
+    <h1>Admin Dashboard</h1>
+    <p>Manage all users and bookings across every tenant.</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="admin-stats">
+    <div class="stat-card">
+      <div class="stat-label">Total Users</div>
+      <div class="stat-value" id="user-count">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Bookings</div>
+      <div class="stat-value" id="booking-count">—</div>
+    </div>
+  </div>
+
+  <div id="status-bar" class="status-bar" style="display:none"></div>
+
+  <!-- Tabs -->
+  <div class="admin-tabs-bar">
+    <button class="tab-btn active" data-tab="users">👤 Users</button>
+    <button class="tab-btn" data-tab="bookings">📋 Bookings</button>
+    <button id="refresh-btn" class="refresh-btn">↺ Refresh</button>
+  </div>
+
+  <div id="panel-users"></div>
+  <div id="panel-bookings" class="hidden"></div>
+</div>
+
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>

@@ -1,3 +1,5 @@
+import hashlib
+import secrets
 from typing import List
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 
@@ -12,11 +14,28 @@ from app.schemas.booking import (
     FlightReservationResponse,
     HotelReservationUpdate,
     FlightReservationUpdate,
+    UserCreate,
+    AdminUserResponse,
 )
 
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import text
+
+
+def _hash_password(password: str) -> str:
+    salt = secrets.token_hex(16)
+    key = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000)
+    return f"{salt}:{key.hex()}"
+
+
+def _verify_password(password: str, stored: str) -> bool:
+    try:
+        salt, key = stored.split(":", 1)
+        new_key = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000)
+        return secrets.compare_digest(new_key.hex(), key)
+    except Exception:
+        return False
 
 
 router = APIRouter(prefix="", tags=["booking"])
@@ -180,21 +199,69 @@ def get_user_id_by_email(email: str, db: Session = Depends(get_db)):
     return {"User_ID": user.User_ID, "email": user.Email}
 
 
-_HARDCODED_PASSWORD = "CMPE-131@2026"
+_LEGACY_PASSWORD = "CMPE-131@2026"
 
 # 5. READ: Login with email and password
 @router.get("/users/login", summary="Login with email and password")
 def login_user(email: str, password: str, db: Session = Depends(get_db)):
-    """
-    Authenticate a user by email and password.
-    Returns the User_ID on success.
-    """
-    if password != _HARDCODED_PASSWORD:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
     user = db.query(User).filter(User.Email == email).first()
     if user is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    return {"User_ID": user.User_ID, "email": user.Email}
+
+    # Users created before password hashing: accept legacy password and upgrade hash
+    if user.Password_Hash is None:
+        if password != _LEGACY_PASSWORD:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        user.Password_Hash = _hash_password(password)
+        db.commit()
+    elif not _verify_password(password, user.Password_Hash):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    return {"User_ID": user.User_ID, "email": user.Email, "is_admin": user.Is_Admin}
+
+
+# 5b. POST: Register a new user
+@router.post("/users/register", status_code=status.HTTP_201_CREATED, summary="Register a new user")
+def register_user(payload: UserCreate, db: Session = Depends(get_db)):
+    if db.query(User).filter(User.Email == payload.Email).first():
+        raise HTTPException(status_code=409, detail="An account with that email already exists.")
+    new_user = User(
+        First_Name=payload.First_Name,
+        Last_Name=payload.Last_Name,
+        Email=payload.Email,
+        Phone_Number=payload.Phone_Number,
+        Password_Hash=_hash_password(payload.Password),
+        Is_Admin=False,
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return {"User_ID": new_user.User_ID, "email": new_user.Email, "is_admin": False}
+
+
+# ── Admin endpoints ──────────────────────────────────────────────────────
+def _require_admin(admin_email: str, admin_password: str, db: Session) -> User:
+    user = db.query(User).filter(User.Email == admin_email).first()
+    if user is None or not user.Is_Admin:
+        raise HTTPException(status_code=403, detail="Admin access required.")
+    if user.Password_Hash is None:
+        if admin_password != _LEGACY_PASSWORD:
+            raise HTTPException(status_code=401, detail="Invalid admin credentials.")
+    elif not _verify_password(admin_password, user.Password_Hash):
+        raise HTTPException(status_code=401, detail="Invalid admin credentials.")
+    return user
+
+
+@router.get("/admin/users", response_model=List[AdminUserResponse], summary="[Admin] List all users")
+def admin_list_users(admin_email: str, admin_password: str, db: Session = Depends(get_db)):
+    _require_admin(admin_email, admin_password, db)
+    return db.query(User).all()
+
+
+@router.get("/admin/bookings", response_model=List[BookingDetailResponse], summary="[Admin] List all bookings")
+def admin_list_bookings(admin_email: str, admin_password: str, db: Session = Depends(get_db)):
+    _require_admin(admin_email, admin_password, db)
+    return db.query(Booking).order_by(Booking.Booking_Id.desc()).all()
 
 
 # 6. CREATE: Add a new Booking

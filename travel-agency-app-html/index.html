@@ -20,8 +20,19 @@
 <!-- ══ Auth Overlay ══════════════════════════════════════════════════════ -->
 <div id="auth-overlay" class="overlay hidden">
   <div class="modal-card">
-    <h2>Sign In</h2>
+    <h2 id="auth-title">Sign In</h2>
     <form id="auth-form" autocomplete="on">
+      <!-- Register-only fields (hidden in sign-in mode) -->
+      <div id="auth-register-fields" class="hidden">
+        <div class="auth-field">
+          <label for="auth-first-name">First Name</label>
+          <input id="auth-first-name" type="text" placeholder="First name" autocomplete="given-name">
+        </div>
+        <div class="auth-field">
+          <label for="auth-last-name">Last Name</label>
+          <input id="auth-last-name" type="text" placeholder="Last name" autocomplete="family-name">
+        </div>
+      </div>
       <div class="auth-field">
         <label for="auth-email">Email address</label>
         <input id="auth-email" type="email" placeholder="you@example.com" autocomplete="email" required>
@@ -36,6 +47,12 @@
         <button id="btn-auth-submit" class="btn-submit" type="submit">Sign In</button>
       </div>
     </form>
+    <p style="text-align:center;margin-top:.75rem;font-size:.82rem">
+      <button id="auth-toggle-link" type="button"
+        style="background:none;border:none;color:var(--color-primary);cursor:pointer;font-size:.82rem;text-decoration:underline">
+        Don't have an account? Register
+      </button>
+    </p>
   </div>
 </div>
 
@@ -49,6 +66,7 @@
     </div>
     <nav class="nav">
       <a id="trips-nav-btn" href="my-trips.html" class="nav-link hidden">My Trips</a>
+      <a id="admin-nav-btn" href="admin.html" class="nav-link hidden">⚙️ Admin</a>
     </nav>
     <div class="header-actions">
       <span id="user-badge" class="user-badge hidden"></span>
