@@ -77,6 +77,21 @@ function updateAuthUI() {
 // Track which tab is active in the auth modal
 let authMode = 'signin'
 
+function _showAuthError(msg) {
+  const el = $('auth-error')
+  el.textContent = msg
+  el.classList.remove('hidden')
+  // Shake animation
+  el.closest('.modal-card')?.classList.remove('shake')
+  void el.closest('.modal-card')?.offsetWidth // reflow
+  el.closest('.modal-card')?.classList.add('shake')
+}
+function _clearAuthError() {
+  const el = $('auth-error')
+  el.textContent = ''
+  el.classList.add('hidden')
+}
+
 function openAuthModal() {
   authMode = 'signin'
   _applyAuthMode()
@@ -85,7 +100,7 @@ function openAuthModal() {
 }
 function closeAuthModal() {
   hide($('auth-overlay'))
-  $('auth-error').textContent = ''
+  _clearAuthError()
 }
 function _applyAuthMode() {
   const isReg = authMode === 'register'
@@ -93,34 +108,35 @@ function _applyAuthMode() {
   $('btn-auth-submit').textContent = isReg ? 'Create Account' : 'Sign In'
   $('auth-register-fields').classList.toggle('hidden', !isReg)
   $('auth-toggle-link').textContent = isReg ? 'Already have an account? Sign In' : "Don't have an account? Register"
-  $('auth-error').textContent = ''
+  _clearAuthError()
 }
 
 async function handleSignIn(e) {
   e.preventDefault()
   const email = $('auth-email').value.trim()
   const password = $('auth-password').value
-  const errEl = $('auth-error')
-  errEl.textContent = ''
+  _clearAuthError()
 
   if (authMode === 'register') {
     const firstName = $('auth-first-name').value.trim()
     const lastName = $('auth-last-name').value.trim()
-    if (!firstName || !lastName) { errEl.textContent = 'First and last name are required.'; return }
-    if (!email) { errEl.textContent = 'Enter your email.'; return }
-    if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return }
+    if (!firstName) { _showAuthError('Please enter your first name.'); return }
+    if (!lastName) { _showAuthError('Please enter your last name.'); return }
+    if (!email) { _showAuthError('Please enter your email address.'); return }
+    if (!password) { _showAuthError('Please enter a password.'); return }
+    if (password.length < 6) { _showAuthError('Password must be at least 6 characters.'); return }
     $('btn-auth-submit').disabled = true
     $('btn-auth-submit').textContent = 'Creating account…'
     const result = await auth.register({ firstName, lastName, email, phone: '', password })
     $('btn-auth-submit').disabled = false
     $('btn-auth-submit').textContent = 'Create Account'
     if (result.success) { closeAuthModal(); updateAuthUI() }
-    else errEl.textContent = result.error
+    else _showAuthError(result.error || 'Registration failed. Please try again.')
     return
   }
 
-  if (!email) { errEl.textContent = 'Enter your email.'; return }
-  if (!password) { errEl.textContent = 'Enter your password.'; return }
+  if (!email) { _showAuthError('Please enter your email address.'); return }
+  if (!password) { _showAuthError('Please enter your password.'); return }
   $('btn-auth-submit').disabled = true
   $('btn-auth-submit').textContent = 'Signing in…'
   const result = await auth.signIn(email, password)
@@ -131,7 +147,7 @@ async function handleSignIn(e) {
     updateAuthUI()
     if (result.isAdmin) window.location.href = 'admin.html'
   } else {
-    errEl.textContent = result.error
+    _showAuthError(result.error || 'Incorrect email or password. Please try again.')
   }
 }
 

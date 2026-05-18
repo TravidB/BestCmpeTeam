@@ -60,7 +60,10 @@ button,input,select{font-family:inherit;font-size:inherit}
 .auth-field label{font-size:.8rem;font-weight:600;color:var(--color-text)}
 .auth-field input{border:1px solid #cfd8e3;border-radius:8px;padding:.55rem .65rem;font-size:.9rem;outline:none;width:100%}
 .auth-field input:focus{border-color:var(--color-primary);box-shadow:0 0 0 3px var(--color-primary-bg)}
-.auth-error{background:#fdecea;border:1px solid #f5c2c0;color:#b42318;border-radius:8px;padding:.55rem .65rem;font-size:.82rem;margin-bottom:.75rem}
+.auth-error{background:#fdecea;border:1px solid #f5c2c0;color:#b42318;border-radius:8px;padding:.55rem .65rem;font-size:.82rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.4rem}
+.auth-error::before{content:"⚠️";flex-shrink:0}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.shake{animation:shake .35s ease}
 .modal-actions{display:flex;justify-content:flex-end;gap:.5rem;margin-top:1rem}
 .btn-cancel{background:#eef2f7;color:var(--color-text);border:none;border-radius:8px;padding:.5rem .85rem;font-size:.85rem;font-weight:600;cursor:pointer}
 .btn-submit{background:var(--color-primary);color:#fff;border:none;border-radius:8px;padding:.5rem .85rem;font-size:.85rem;font-weight:600;cursor:pointer}

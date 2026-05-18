@@ -79,20 +79,31 @@ function closeAuthModal() {
   if (modal) modal.style.display = 'none'
 }
 
+function _showAuthError(msg) {
+  const el = document.getElementById('auth-error')
+  if (!el) return
+  el.textContent = msg
+  el.classList.remove('hidden')
+}
+function _clearAuthError() {
+  const el = document.getElementById('auth-error')
+  if (!el) return
+  el.textContent = ''
+  el.classList.add('hidden')
+}
+
 async function handleSignIn(e) {
   e.preventDefault()
   const email = document.getElementById('auth-email')?.value?.trim()
   const password = document.getElementById('auth-password')?.value
-  const errEl = document.getElementById('auth-error')
   const btn = document.getElementById('auth-submit')
 
-  if (!email || !password) {
-    if (errEl) errEl.textContent = 'Please enter email and password.'
-    return
-  }
+  _clearAuthError()
+
+  if (!email) { _showAuthError('Please enter your email address.'); return }
+  if (!password) { _showAuthError('Please enter your password.'); return }
 
   if (btn) { btn.disabled = true; btn.textContent = 'Signing in…' }
-  if (errEl) errEl.textContent = ''
 
   const result = await auth.signIn(email, password)
   if (btn) { btn.disabled = false; btn.textContent = 'Sign In' }
@@ -102,7 +113,7 @@ async function handleSignIn(e) {
     updateAuthUI()
     loadTrips()
   } else {
-    if (errEl) errEl.textContent = result.error || 'Sign in failed.'
+    _showAuthError(result.error || 'Incorrect email or password. Please try again.')
   }
 }
 
