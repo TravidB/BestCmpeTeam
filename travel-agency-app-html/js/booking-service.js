@@ -83,7 +83,9 @@ export const bookingService = {
 
   async listBookings(userId, agentId) {
     if (!userId) throw new Error('Please sign in to view saved trips.')
-    const bookings = await api.get('/bookings/by-agent-user', { agent_id: agentId, user_id: userId })
+    const params = { user_id: userId }
+    if (agentId != null) params.agent_id = agentId
+    const bookings = await api.get('/bookings/by-agent-user', params)
     return (Array.isArray(bookings) ? bookings : []).map((b) => ({
       bookingId: b.Booking_Id ?? b.booking_id ?? b.id,
       startDate: b.Start_Date ?? b.start_date,

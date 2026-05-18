@@ -1,6 +1,6 @@
 import hashlib
 import secrets
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 
 from app.core.database import get_db
@@ -159,21 +159,20 @@ def read_bookings(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 @router.get(
     "/bookings/by-agent-user",
     response_model=List[BookingDetailResponse],
-    summary="List bookings by agent ID and user ID",
+    summary="List bookings by user ID (optionally filtered by agent ID)",
 )
 def read_bookings_by_agent_and_user(
-    agent_id: int,
     user_id: int,
+    agent_id: Optional[int] = None,
     db: Session = Depends(get_db),
 ):
     """
-    Retrieve saved bookings for a specific agent and user combination.
+    Retrieve saved bookings for a user. If agent_id is provided, filter by it.
     """
-    return (
-        db.query(Booking)
-        .filter(Booking.Agent_Id == agent_id, Booking.User_Id == user_id)
-        .all()
-    )
+    q = db.query(Booking).filter(Booking.User_Id == user_id)
+    if agent_id is not None:
+        q = q.filter(Booking.Agent_Id == agent_id)
+    return q.order_by(Booking.Booking_Id.desc()).all()
 
 
 # 3. READ: Get a specific Booking by ID (with full details)

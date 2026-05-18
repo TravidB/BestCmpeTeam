@@ -32,6 +32,7 @@ const PALETTES = [
 // ── Tenant ─────────────────────────────────────────────────────────────────
 function setTenant(tenant) {
   state.tenant = tenant
+  localStorage.setItem('tenant', tenant.key)
   document.documentElement.setAttribute('data-theme', tenant.theme)
   $('brand-logo').textContent = tenant.brandLogo
   $('brand-name').textContent = tenant.brandName
@@ -603,8 +604,13 @@ async function handleBook() {
 // ── Init ───────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   const fromHost = detectTenantFromHost()
-  if (fromHost) setTenant(fromHost)
-  else initTenantPicker()
+  if (fromHost) {
+    setTenant(fromHost)
+  } else {
+    const saved = localStorage.getItem('tenant')
+    if (saved) { setTenant(resolveTenant(saved)) }
+    else initTenantPicker()
+  }
 
   updateAuthUI()
 

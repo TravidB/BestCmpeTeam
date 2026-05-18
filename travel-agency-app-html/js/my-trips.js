@@ -41,12 +41,12 @@ function initTenantPicker() {
     btn.addEventListener('click', () => {
       const t = resolveTenant(btn.dataset.key)
       localStorage.setItem('tenant', t.key)
-      overlay.style.display = 'none'
+      overlay.classList.add('hidden')
       applyTenant(t)
       loadTrips()
     })
   })
-  overlay.style.display = 'flex'
+  overlay.classList.remove('hidden')
 }
 
 // ── Auth UI ────────────────────────────────────────────────────────────────
@@ -68,15 +68,16 @@ function updateAuthUI() {
 function openAuthModal() {
   const modal = document.getElementById('auth-modal')
   if (modal) {
-    modal.style.display = 'flex'
+    modal.classList.remove('hidden')
     document.getElementById('auth-email')?.focus()
-    document.getElementById('auth-error')?.textContent = ''
+    const errEl = document.getElementById('auth-error')
+    if (errEl) { errEl.textContent = ''; errEl.classList.add('hidden') }
   }
 }
 
 function closeAuthModal() {
   const modal = document.getElementById('auth-modal')
-  if (modal) modal.style.display = 'none'
+  if (modal) modal.classList.add('hidden')
 }
 
 function _showAuthError(msg) {
