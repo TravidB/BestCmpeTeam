@@ -150,6 +150,10 @@ function handleClear() {
               :loading="loading.hotels"
               :error="errors.hotels"
               :selected-hotel="selectedHotel"
+              :traveling-with-pets="searchParams.travelingWithPets"
+              :pet-count="searchParams.petCount"
+              :pet-type="searchParams.petType"
+              :selected-flight="selectedFlight"
               @select="selectHotel"
             />
             <ActivityList
@@ -175,6 +179,9 @@ function handleClear() {
           :booking-error="bookingError"
           :is-authenticated="isAuthenticated"
           :user-email="userEmail"
+          :traveling-with-pets="searchParams.travelingWithPets"
+          :pet-count="searchParams.petCount"
+          :pet-type="searchParams.petType"
           @book="handleBook"
           @clear="clearSelections"
         />

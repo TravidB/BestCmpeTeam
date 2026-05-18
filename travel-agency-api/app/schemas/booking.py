@@ -15,6 +15,9 @@ class HotelReservationCreate(BaseModel):
     Check_Out_Date: date
     Check_Out_Time: Optional[str] = None
     Rate: Optional[float] = None
+    Pet_Count: Optional[int] = 0
+    Pet_Type: Optional[str] = None
+    Pet_Fee: Optional[float] = 0.0
 
 
 class FlightReservationCreate(BaseModel):
@@ -36,6 +39,9 @@ class HotelReservationUpdate(BaseModel):
     Check_Out_Date: Optional[date] = None
     Check_Out_Time: Optional[str] = None
     Rate: Optional[float] = None
+    Pet_Count: Optional[int] = None
+    Pet_Type: Optional[str] = None
+    Pet_Fee: Optional[float] = None
 
 
 class FlightReservationUpdate(BaseModel):
@@ -53,6 +59,9 @@ class FlightReservationUpdate(BaseModel):
 class HotelReservationResponse(HotelReservationCreate):
     Reservation_No: int
     Hotel_Name: Optional[str] = None
+    Pet_Count: Optional[int] = 0
+    Pet_Type: Optional[str] = None
+    Pet_Fee: Optional[float] = 0.0
 
     class Config:
         from_attributes = True

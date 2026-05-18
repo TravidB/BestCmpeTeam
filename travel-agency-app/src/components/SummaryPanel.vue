@@ -1,4 +1,6 @@
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps({
   tripType: { type: String, default: 'ONEWAY' },
   selectedFlight: { type: Object, default: null },
@@ -12,6 +14,22 @@ const props = defineProps({
   bookingError: { type: String, default: null },
   isAuthenticated: { type: Boolean, default: false },
   userEmail: { type: String, default: '' },
+  travelingWithPets: { type: Boolean, default: false },
+  petCount: { type: Number, default: 1 },
+  petType: { type: String, default: 'dog' },
+})
+
+const petEmoji = computed(() => {
+  if (props.petType === 'cat') return '🐱'
+  if (props.petType === 'other') return '🐇'
+  return '🐶'
+})
+
+const petTotalFee = computed(() => {
+  if (!props.travelingWithPets || !props.selectedHotel?.petFriendly) return 0
+  const fee = props.selectedHotel.petFeePerNight ?? 0
+  const nights = props.selectedHotel.nights ?? 1
+  return fee * nights * props.petCount
 })
 
 const emit = defineEmits(['book', 'clear'])
@@ -136,10 +154,29 @@ const emit = defineEmits(['book', 'clear'])
           </div>
         </div>
 
+        <!-- Pet section -->
+        <div v-if="travelingWithPets" class="summary-section summary-section--pet">
+          <div class="section-label">
+            <span class="section-icon">🐾</span> Pets
+          </div>
+          <div v-if="selectedHotel && selectedHotel.petFriendly" class="summary-item summary-item--pet">
+            <div class="item-title">{{ petEmoji }} {{ petCount }} {{ petType }}{{ petCount > 1 ? 's' : '' }}</div>
+            <div class="item-sub">{{ selectedHotel.petAmenities?.slice(0, 3).join(' · ') }}</div>
+            <div class="item-sub">${{ selectedHotel.petFeePerNight }}/night × {{ selectedHotel.nights }} nights × {{ petCount }} pet{{ petCount > 1 ? 's' : '' }}</div>
+            <div class="item-price">${{ petTotalFee.toLocaleString() }} pet fees</div>
+          </div>
+          <div v-else-if="selectedHotel && !selectedHotel.petFriendly" class="not-selected" style="color:#856404">
+            ⚠️ Selected hotel does not allow pets
+          </div>
+          <div v-else class="not-selected">Select a pet-friendly hotel</div>
+        </div>
+
+        <div v-if="travelingWithPets" class="summary-divider" />
+
         <!-- Total -->
         <div class="summary-total">
           <span class="total-label">Total</span>
-          <span class="total-price">${{ totalPrice.toLocaleString() }}</span>
+          <span class="total-price">${{ (totalPrice + petTotalFee).toLocaleString() }}</span>
         </div>
 
         <!-- Booking error -->
@@ -388,6 +425,16 @@ const emit = defineEmits(['book', 'clear'])
   font-size: 1.4rem;
   font-weight: 800;
   color: var(--color-primary);
+}
+
+.summary-section--pet {
+  background: #f0fdf4;
+  border-top: 1px solid #b7e4c7;
+  border-bottom: 1px solid #b7e4c7;
+}
+
+.summary-item--pet {
+  background: #d8f3dc !important;
 }
 
 /* Book button */

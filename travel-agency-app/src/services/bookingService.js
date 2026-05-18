@@ -82,6 +82,8 @@ function toHotelReservations(payload) {
   if (!payload.hotel) return []
 
   const hotelCode = Number.parseInt(String(payload.hotel.id ?? ''), 10)
+  const pet = payload.petInfo
+  const nights = payload.hotel.nights || 1
 
   return [
     {
@@ -91,6 +93,9 @@ function toHotelReservations(payload) {
       Check_Out_Date: normalizeDate(payload.hotel.checkOut, normalizeDate(payload.searchParams?.toDate || payload.searchParams?.fromDate)),
       Check_Out_Time: normalizeTime(payload.hotel.checkOutTime),
       Rate: Number(payload.hotel.totalPrice ?? 0),
+      Pet_Count: pet ? Number(pet.petCount) : 0,
+      Pet_Type: pet ? String(pet.petType) : null,
+      Pet_Fee: pet ? Number(pet.petFeePerNight) * Number(pet.petCount) * nights : 0,
     },
   ]
 }
@@ -147,7 +152,14 @@ function normalizeBookingRecord(record) {
     startDate: normalizeDate(record?.Start_Date ?? record?.startDate),
     endDate: normalizeDate(record?.End_Date ?? record?.endDate),
     user: record?.user || null,
-    hotelReservations: Array.isArray(record?.hotel_reservations) ? record.hotel_reservations : [],
+    hotelReservations: Array.isArray(record?.hotel_reservations)
+      ? record.hotel_reservations.map((hr) => ({
+          ...hr,
+          Pet_Count: hr.Pet_Count ?? 0,
+          Pet_Type: hr.Pet_Type ?? null,
+          Pet_Fee: hr.Pet_Fee ?? 0,
+        }))
+      : [],
     flightReservations: Array.isArray(record?.flight_reservations) ? record.flight_reservations : [],
   }
 }

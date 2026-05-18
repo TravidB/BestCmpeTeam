@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Trips — TravelEase</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── My Trips additional styles ────────────────────────────────────── */
+    .booking-card {
+      background: #fff;
+      border: 1px solid var(--color-border);
+      border-radius: 14px;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      overflow: hidden;
+      transition: box-shadow .2s;
+    }
+    .booking-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.1); }
+    .booking-card.reservation--past { opacity: .75; }
+    .booking-card.reservation--soon { border-left: 4px solid var(--color-primary); }
+    .booking-card.reservation--upcoming { border-left: 4px solid #48bb78; }
+
+    .booking-card__header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .85rem 1.2rem; border-bottom: 1px solid var(--color-border);
+      flex-wrap: wrap; gap: .5rem;
+      background: var(--color-bg-subtle);
+    }
+    .booking-meta { display: flex; flex-direction: column; gap: .15rem; }
+    .booking-id { font-weight: 700; font-size: .88rem; color: var(--color-text); }
+    .booking-dates { font-size: .78rem; color: var(--color-text-muted); }
+    .booking-actions { display: flex; gap: .5rem; }
+
+    .booking-reservations { padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: .65rem; }
+    .no-reservations { color: var(--color-text-muted); font-size: .82rem; font-style: italic; }
+
+    .reservation-card {
+      display: flex; align-items: flex-start; gap: .7rem;
+      padding: .65rem .9rem; border-radius: 8px;
+      background: var(--color-bg); border: 1px solid var(--color-border);
+    }
+    .reservation-card--pet { background: #f0fff4; border-color: #9ae6b4; }
+    .res-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: .1rem; }
+    .res-body { flex: 1; min-width: 0; }
+    .res-title { font-weight: 600; font-size: .88rem; color: var(--color-text); margin-bottom: .15rem; }
+    .res-detail { display: flex; align-items: center; gap: .25rem; font-size: .82rem; font-weight: 500; }
+    .res-arrow { color: var(--color-primary); }
+    .res-meta { font-size: .75rem; color: var(--color-text-muted); margin-top: .15rem; }
+    .res-price { font-weight: 700; color: var(--color-primary); font-size: .85rem; margin-top: .25rem; }
+
+    .stop-badge {
+      display: inline-block; padding: .1rem .35rem; border-radius: 4px;
+      font-size: .7rem; font-weight: 600; text-transform: uppercase;
+    }
+    .stop-badge--nonstop { background: #c6f6d5; color: #22543d; }
+    .stop-badge--stop { background: #fed7aa; color: #7b341e; }
+
+    .booking-edit-form {
+      padding: .75rem 1.2rem; background: #fffbf0;
+      border-bottom: 1px solid #f6e05e;
+      display: flex; flex-wrap: wrap; gap: .75rem; align-items: flex-end;
+    }
+    .booking-edit-form label {
+      display: flex; flex-direction: column; gap: .25rem;
+      font-size: .8rem; font-weight: 600; color: var(--color-text);
+    }
+    .booking-edit-form input[type="date"] {
+      padding: .35rem .6rem; border: 1px solid var(--color-border);
+      border-radius: 6px; font-size: .82rem; background: #fff;
+    }
+
+    .trips-loading { text-align: center; padding: 3rem; color: var(--color-text-muted); }
+    .empty-state { text-align: center; padding: 4rem 2rem; color: var(--color-text-muted); }
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-state h3 { font-size: 1.2rem; margin-bottom: .5rem; color: var(--color-text); }
+    .empty-state p { margin-bottom: 1.25rem; }
+    .empty-state a, .empty-state button {
+      display: inline-block; padding: .55rem 1.2rem;
+      background: var(--color-primary); color: #fff; border: none;
+      border-radius: 8px; font-size: .88rem; font-weight: 600; cursor: pointer;
+    }
+    .error-banner {
+      background: #fff5f5; border: 1px solid #feb2b2; color: #c53030;
+      padding: 1rem 1.2rem; border-radius: 8px; margin-bottom: 1rem;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
+      background: #2d3748; color: #fff; padding: .7rem 1.1rem;
+      border-radius: 8px; font-size: .85rem; box-shadow: 0 4px 16px rgba(0,0,0,.25);
+      opacity: 0; transform: translateY(8px); pointer-events: none;
+      transition: opacity .25s, transform .25s;
+    }
+    #toast.toast--visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    #toast.toast--error { background: #c53030; }
+  </style>
+</head>
+<body>
+
+<!-- ══ Tenant Picker Overlay ═════════════════════════════════════════════ -->
+<div id="tenant-overlay" class="overlay hidden">
+  <div class="modal-card">
+    <h2>Welcome to TravelEase ✈️</h2>
+    <p>Choose your travel portal to continue</p>
+    <div id="tenant-list" class="tenant-grid"></div>
+  </div>
+</div>
+
+<!-- ══ Auth Modal ═════════════════════════════════════════════════════════ -->
+<div id="auth-modal" class="overlay hidden">
+  <div class="modal-card">
+    <h2>Sign In</h2>
+    <form id="auth-form" autocomplete="on">
+      <div class="auth-field">
+        <label for="auth-email">Email address</label>
+        <input id="auth-email" type="email" placeholder="you@example.com" autocomplete="email" required>
+      </div>
+      <div class="auth-field">
+        <label for="auth-password">Password</label>
+        <input id="auth-password" type="password" placeholder="Password" autocomplete="current-password" required>
+      </div>
+      <p id="auth-error" class="auth-error hidden"></p>
+      <div class="modal-actions">
+        <button id="auth-close" class="btn-cancel" type="button">Cancel</button>
+        <button id="auth-submit" class="btn-submit" type="submit">Sign In</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ Header ════════════════════════════════════════════════════════════ -->
+<header class="app-header">
+  <div class="app-header__inner">
+    <div class="brand">
+      <span id="brand-logo" class="brand-logo">✈️</span>
+      <span id="brand-name" class="brand-name">TravelEase</span>
+    </div>
+    <nav class="nav">
+      <a id="home-link" href="index.html" class="nav-link">← Search</a>
+    </nav>
+    <div class="header-actions">
+      <div id="user-menu" class="header-actions" style="display:none">
+        <span id="user-email" class="user-badge"></span>
+        <button id="sign-out-btn" class="btn-signin">Sign Out</button>
+      </div>
+      <button id="sign-in-btn" class="btn-signin">Sign In</button>
+    </div>
+  </div>
+</header>
+
+<!-- ══ Page Content ═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-hero">
+    <div>
+      <p class="page-hero__eyebrow">My Account</p>
+      <h1 class="page-hero__title">My Trips</h1>
+      <p class="page-hero__sub">All your saved bookings in one place.</p>
+    </div>
+  </div>
+
+  <div id="trips-loading" class="trips-loading" style="display:none">
+    <div class="spinner"></div>
+    <p style="margin-top:.75rem">Loading your trips…</p>
+  </div>
+
+  <div id="empty-state" class="empty-state" style="display:none">
+    <div class="empty-icon">🗺️</div>
+    <h3>No trips yet</h3>
+    <p>Search for flights and hotels to plan your next adventure.</p>
+    <a href="index.html">Start Planning</a>
+  </div>
+
+  <div id="trips-container" class="trips-list"></div>
+</div>
+
+<script type="module" src="js/my-trips.js"></script>
+</body>
+</html>

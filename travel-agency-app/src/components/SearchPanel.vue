@@ -135,6 +135,43 @@ function handleClear() {
           />
         </div>
 
+        <!-- Pet Toggle -->
+        <div class="field field--pets">
+          <label class="field__label">
+            <span class="field__icon">🐾</span> Pets
+          </label>
+          <select v-model="searchParams.travelingWithPets" class="field__input">
+            <option :value="false">No pets</option>
+            <option :value="true">Traveling with pets</option>
+          </select>
+        </div>
+
+        <!-- Pet Type -->
+        <div v-if="searchParams.travelingWithPets" class="field field--narrow">
+          <label class="field__label">
+            <span class="field__icon">🐕</span> Pet
+          </label>
+          <select v-model="searchParams.petType" class="field__input">
+            <option value="dog">Dog</option>
+            <option value="cat">Cat</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <!-- Pet Count -->
+        <div v-if="searchParams.travelingWithPets" class="field field--narrow">
+          <label class="field__label">
+            <span class="field__icon">🐾</span> # Pets
+          </label>
+          <input
+            v-model.number="searchParams.petCount"
+            class="field__input"
+            type="number"
+            min="1"
+            max="4"
+          />
+        </div>
+
         <!-- Search Button -->
         <div class="field field--action">
           <div class="action-buttons">
@@ -196,6 +233,10 @@ function handleClear() {
 
 .field--trip-type {
   flex: 0 0 140px;
+}
+
+.field--pets {
+  flex: 0 0 160px;
 }
 
 .field--action {

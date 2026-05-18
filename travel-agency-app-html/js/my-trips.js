@@ -1,0 +1,393 @@
+import { bookingService } from './booking-service.js'
+import { auth } from './auth.js'
+import { resolveTenant, detectTenantFromHost, ALL_TENANTS } from './config.js'
+
+// ── State ──────────────────────────────────────────────────────────────────
+const state = {
+  tenant: null,
+  bookings: [],
+  isLoading: false,
+  editingId: null,
+}
+
+// ── Tenant ─────────────────────────────────────────────────────────────────
+function applyTenant(tenant) {
+  state.tenant = tenant
+  document.title = `My Trips — ${tenant.brandName}`
+  document.body.setAttribute('data-theme', tenant.theme)
+  const logo = document.getElementById('brand-logo')
+  const name = document.getElementById('brand-name')
+  if (logo) logo.textContent = tenant.brandLogo
+  if (name) name.textContent = tenant.brandName
+}
+
+function initTenantPicker() {
+  const detected = detectTenantFromHost()
+  if (detected) { applyTenant(detected); return }
+  const saved = localStorage.getItem('tenant')
+  if (saved) { applyTenant(resolveTenant(saved)); return }
+
+  const overlay = document.getElementById('tenant-overlay')
+  const list = document.getElementById('tenant-list')
+  if (!overlay || !list) { applyTenant(resolveTenant('agenta')); return }
+
+  list.innerHTML = ALL_TENANTS.map(t => `
+    <button class="tenant-btn" data-key="${t.key}">
+      <span class="tenant-logo">${t.brandLogo}</span>
+      <span class="tenant-label">${t.brandName}</span>
+    </button>`).join('')
+
+  list.querySelectorAll('.tenant-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = resolveTenant(btn.dataset.key)
+      localStorage.setItem('tenant', t.key)
+      overlay.style.display = 'none'
+      applyTenant(t)
+      loadTrips()
+    })
+  })
+  overlay.style.display = 'flex'
+}
+
+// ── Auth UI ────────────────────────────────────────────────────────────────
+function updateAuthUI() {
+  const userMenu = document.getElementById('user-menu')
+  const signInBtn = document.getElementById('sign-in-btn')
+  const userEmail = document.getElementById('user-email')
+
+  if (auth.isAuthenticated()) {
+    if (userMenu) userMenu.style.display = 'flex'
+    if (signInBtn) signInBtn.style.display = 'none'
+    if (userEmail) userEmail.textContent = auth.getEmail()
+  } else {
+    if (userMenu) userMenu.style.display = 'none'
+    if (signInBtn) signInBtn.style.display = 'block'
+  }
+}
+
+function openAuthModal() {
+  const modal = document.getElementById('auth-modal')
+  if (modal) {
+    modal.style.display = 'flex'
+    document.getElementById('auth-email')?.focus()
+    document.getElementById('auth-error')?.textContent = ''
+  }
+}
+
+function closeAuthModal() {
+  const modal = document.getElementById('auth-modal')
+  if (modal) modal.style.display = 'none'
+}
+
+async function handleSignIn(e) {
+  e.preventDefault()
+  const email = document.getElementById('auth-email')?.value?.trim()
+  const password = document.getElementById('auth-password')?.value
+  const errEl = document.getElementById('auth-error')
+  const btn = document.getElementById('auth-submit')
+
+  if (!email || !password) {
+    if (errEl) errEl.textContent = 'Please enter email and password.'
+    return
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Signing in…' }
+  if (errEl) errEl.textContent = ''
+
+  const result = await auth.signIn(email, password)
+  if (btn) { btn.disabled = false; btn.textContent = 'Sign In' }
+
+  if (result.success) {
+    closeAuthModal()
+    updateAuthUI()
+    loadTrips()
+  } else {
+    if (errEl) errEl.textContent = result.error || 'Sign in failed.'
+  }
+}
+
+// ── Format helpers ─────────────────────────────────────────────────────────
+function fmtDate(d) {
+  if (!d) return '—'
+  const dt = new Date(d)
+  return isNaN(dt) ? String(d) : dt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+function fmtTime(t) {
+  if (!t) return ''
+  return String(t).slice(0, 5)
+}
+
+function fmtCurrency(n) {
+  const v = Number(n)
+  if (isNaN(v) || v === 0) return ''
+  return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+}
+
+// ── Render bookings ────────────────────────────────────────────────────────
+function reservationStatusClass(startDate) {
+  const now = new Date()
+  const start = new Date(startDate)
+  if (isNaN(start)) return ''
+  const diff = start - now
+  if (diff < 0) return 'reservation--past'
+  if (diff < 1000 * 60 * 60 * 24 * 7) return 'reservation--soon'
+  return 'reservation--upcoming'
+}
+
+function flightBadgeHTML(f) {
+  const stops = Number(f.Stops ?? 0)
+  const stopLabel = stops === 0 ? 'Nonstop' : stops === 1 ? '1 Stop' : `${stops} Stops`
+  return `
+    <div class="reservation-card reservation-card--flight">
+      <div class="res-icon">✈️</div>
+      <div class="res-body">
+        <div class="res-title">${f.Airline_Code ?? ''} ${f.Flight_Number ?? ''}</div>
+        <div class="res-detail">
+          <span>${f.Origin_Airport_Code ?? '?'}</span>
+          <span class="res-arrow">→</span>
+          <span>${f.Destination_Airport_Code ?? '?'}</span>
+        </div>
+        <div class="res-meta">
+          ${fmtDate(f.Departure_Date ?? f.departure_date)}
+          ${f.Departure_Time ? ' · ' + fmtTime(f.Departure_Time) : ''}
+          ${f.Arrive_Time ? ' → ' + fmtTime(f.Arrive_Time) : ''}
+          · <span class="stop-badge stop-badge--${stops === 0 ? 'nonstop' : 'stop'}">${stopLabel}</span>
+        </div>
+        ${f.Rate ? `<div class="res-price">${fmtCurrency(f.Rate)}</div>` : ''}
+      </div>
+    </div>`
+}
+
+function hotelBadgeHTML(h) {
+  const petCount = Number(h.Pet_Count ?? h.pet_count ?? 0)
+  const petFee = Number(h.Pet_Fee ?? h.pet_fee ?? 0)
+  const petType = h.Pet_Type ?? h.pet_type ?? ''
+  const hasPet = petCount > 0
+
+  return `
+    <div class="reservation-card reservation-card--hotel${hasPet ? ' reservation-card--pet' : ''}">
+      <div class="res-icon">🏨</div>
+      <div class="res-body">
+        <div class="res-title">
+          Hotel #${h.Hotel_Code ?? h.hotel_code ?? '?'}
+          ${hasPet ? '<span class="pet-pill">🐾 Pet Stay</span>' : ''}
+        </div>
+        <div class="res-meta">
+          ${fmtDate(h.Check_In_Date ?? h.check_in_date)} → ${fmtDate(h.Check_Out_Date ?? h.check_out_date)}
+          ${h.Check_In_Time ? ' · Check-in ' + fmtTime(h.Check_In_Time) : ''}
+        </div>
+        ${h.Rate ? `<div class="res-price">${fmtCurrency(h.Rate)}</div>` : ''}
+        ${hasPet ? `<div class="pet-details">🐾 ${petCount} ${petType}${petCount > 1 ? 's' : ''}${petFee ? ' · Pet fee: ' + fmtCurrency(petFee) : ''}</div>` : ''}
+      </div>
+    </div>`
+}
+
+function bookingCardHTML(b) {
+  const id = b.bookingId
+  const flights = (b.flightReservations || []).map(flightBadgeHTML).join('')
+  const hotels = (b.hotelReservations || []).map(hotelBadgeHTML).join('')
+  const statusClass = reservationStatusClass(b.startDate)
+  const isEditing = state.editingId === id
+
+  return `
+    <div class="booking-card ${statusClass}" data-booking-id="${id}">
+      <div class="booking-card__header">
+        <div class="booking-meta">
+          <span class="booking-id">Booking #${id}</span>
+          <span class="booking-dates">${fmtDate(b.startDate)}${b.endDate && b.endDate !== b.startDate ? ' → ' + fmtDate(b.endDate) : ''}</span>
+        </div>
+        <div class="booking-actions">
+          <button class="btn btn--sm btn--outline edit-btn" data-id="${id}" title="Edit dates">
+            ✏️ Edit
+          </button>
+          <button class="btn btn--sm btn--danger delete-btn" data-id="${id}" title="Delete booking">
+            🗑️ Delete
+          </button>
+        </div>
+      </div>
+
+      ${isEditing ? `
+      <div class="booking-edit-form">
+        <label>Start Date <input type="date" class="edit-start-date" value="${b.startDate || ''}"></label>
+        <label>End Date <input type="date" class="edit-end-date" value="${b.endDate || ''}"></label>
+        <div class="edit-actions">
+          <button class="btn btn--primary btn--sm save-btn" data-id="${id}">Save</button>
+          <button class="btn btn--sm cancel-btn" data-id="${id}">Cancel</button>
+        </div>
+      </div>` : ''}
+
+      <div class="booking-reservations">
+        ${flights}
+        ${hotels}
+        ${!flights && !hotels ? '<p class="no-reservations">No reservation details available.</p>' : ''}
+      </div>
+    </div>`
+}
+
+function renderBookings() {
+  const container = document.getElementById('trips-container')
+  const emptyState = document.getElementById('empty-state')
+  const loadingEl = document.getElementById('trips-loading')
+
+  if (loadingEl) loadingEl.style.display = 'none'
+
+  if (!container) return
+
+  if (state.bookings.length === 0) {
+    container.innerHTML = ''
+    if (emptyState) emptyState.style.display = 'block'
+    return
+  }
+
+  if (emptyState) emptyState.style.display = 'none'
+  container.innerHTML = state.bookings.map(bookingCardHTML).join('')
+  attachCardListeners(container)
+}
+
+function attachCardListeners(container) {
+  container.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id
+      state.editingId = state.editingId === id ? null : id
+      renderBookings()
+    })
+  })
+
+  container.querySelectorAll('.save-btn').forEach(btn => {
+    btn.addEventListener('click', () => saveEdit(btn.closest('.booking-card')))
+  })
+
+  container.querySelectorAll('.cancel-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.editingId = null
+      renderBookings()
+    })
+  })
+
+  container.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => confirmDelete(btn.dataset.id))
+  })
+}
+
+async function saveEdit(card) {
+  const id = card?.dataset?.bookingId
+  if (!id) return
+
+  const startDate = card.querySelector('.edit-start-date')?.value
+  const endDate = card.querySelector('.edit-end-date')?.value
+
+  const saveBtn = card.querySelector('.save-btn')
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…' }
+
+  try {
+    await bookingService.updateBooking(id, { startDate, endDate })
+    const booking = state.bookings.find(b => String(b.bookingId) === String(id))
+    if (booking) {
+      if (startDate) booking.startDate = startDate
+      if (endDate) booking.endDate = endDate
+    }
+    state.editingId = null
+    renderBookings()
+    showToast('Booking updated successfully.')
+  } catch (err) {
+    showToast('Failed to update booking: ' + (err.message || 'Unknown error'), 'error')
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save' }
+  }
+}
+
+async function confirmDelete(id) {
+  if (!confirm(`Delete booking #${id}? This cannot be undone.`)) return
+
+  try {
+    await bookingService.deleteBooking(id)
+    state.bookings = state.bookings.filter(b => String(b.bookingId) !== String(id))
+    renderBookings()
+    showToast('Booking deleted.')
+  } catch (err) {
+    showToast('Failed to delete: ' + (err.message || 'Unknown error'), 'error')
+  }
+}
+
+// ── Load trips ─────────────────────────────────────────────────────────────
+async function loadTrips() {
+  if (!auth.isAuthenticated()) {
+    const container = document.getElementById('trips-container')
+    const emptyState = document.getElementById('empty-state')
+    const loadingEl = document.getElementById('trips-loading')
+    if (loadingEl) loadingEl.style.display = 'none'
+    if (container) container.innerHTML = ''
+    if (emptyState) {
+      emptyState.style.display = 'block'
+      emptyState.innerHTML = `
+        <div class="empty-icon">🔐</div>
+        <h3>Sign in to view your trips</h3>
+        <p>Your saved bookings will appear here.</p>
+        <button class="btn btn--primary" id="empty-sign-in-btn">Sign In</button>`
+      emptyState.querySelector('#empty-sign-in-btn')?.addEventListener('click', openAuthModal)
+    }
+    return
+  }
+
+  const loadingEl = document.getElementById('trips-loading')
+  const container = document.getElementById('trips-container')
+  const emptyState = document.getElementById('empty-state')
+  if (loadingEl) loadingEl.style.display = 'block'
+  if (container) container.innerHTML = ''
+  if (emptyState) emptyState.style.display = 'none'
+
+  try {
+    state.bookings = await bookingService.listBookings(
+      auth.getUserId(),
+      state.tenant?.agentId
+    )
+    renderBookings()
+  } catch (err) {
+    if (loadingEl) loadingEl.style.display = 'none'
+    if (container) {
+      container.innerHTML = `<div class="error-banner">Failed to load trips: ${err.message || 'Unknown error'}</div>`
+    }
+  }
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function showToast(message, type = 'success') {
+  let toast = document.getElementById('toast')
+  if (!toast) {
+    toast = document.createElement('div')
+    toast.id = 'toast'
+    document.body.appendChild(toast)
+  }
+  toast.textContent = message
+  toast.className = `toast toast--${type} toast--visible`
+  clearTimeout(toast._timer)
+  toast._timer = setTimeout(() => toast.classList.remove('toast--visible'), 3500)
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initTenantPicker()
+  updateAuthUI()
+
+  // Nav links
+  document.getElementById('sign-in-btn')?.addEventListener('click', openAuthModal)
+  document.getElementById('sign-out-btn')?.addEventListener('click', () => {
+    auth.signOut()
+    updateAuthUI()
+    loadTrips()
+  })
+  document.getElementById('home-link')?.addEventListener('click', (e) => {
+    e.preventDefault()
+    window.location.href = 'index.html'
+  })
+
+  // Auth modal
+  document.getElementById('auth-close')?.addEventListener('click', closeAuthModal)
+  document.getElementById('auth-modal')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeAuthModal()
+  })
+  document.getElementById('auth-form')?.addEventListener('submit', handleSignIn)
+
+  if (auth.isAuthenticated()) loadTrips()
+  else loadTrips() // will show sign-in prompt
+})

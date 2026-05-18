@@ -98,6 +98,13 @@ export function useBooking() {
         hotel: selectedHotel.value,
         activities: [...selectedActivities.value],
         totalPrice: totalPrice.value,
+        petInfo: searchParams.travelingWithPets
+          ? {
+              petCount: searchParams.petCount || 1,
+              petType: searchParams.petType || 'dog',
+              petFeePerNight: selectedHotel.value?.petFeePerNight ?? 0,
+            }
+          : null,
       }
       bookingResult.value = await bookingService.createBooking(payload)
     } catch (e) {

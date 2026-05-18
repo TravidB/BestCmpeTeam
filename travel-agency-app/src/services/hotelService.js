@@ -283,6 +283,101 @@ function mapHotelFromApi(hotel, index, searchParams) {
   }
 }
 
+// ─── Pet-Friendly Hotel Data ───────────────────────────────────────────────
+
+const PET_FRIENDLY_HOTELS = new Set([
+  // Paris
+  'Hôtel Plaza Athénée', 'Novotel Paris Centre',
+  // London
+  'The Savoy', 'Marriott London Grosvenor Square',
+  // Tokyo
+  'Park Hyatt Tokyo', 'The Prince Gallery Tokyo Kioicho',
+  // New York
+  'The Plaza Hotel', 'The Standard High Line',
+  // Los Angeles
+  'Shutters on the Beach', 'Freehand Los Angeles',
+  // Honolulu
+  'Royal Hawaiian Hotel', 'Outrigger Reef Waikiki Beach',
+  // Dubai
+  'Address Downtown Dubai', 'Rove Downtown Dubai',
+  // Singapore
+  'The Fullerton Hotel Singapore', 'Park Hotel Clarke Quay',
+  // Bangkok
+  'Mandarin Oriental Bangkok', 'The Quarter Ladprao',
+  // Sydney
+  'Park Hyatt Sydney', 'The Old Clare Hotel',
+  // Seoul
+  'Lotte Hotel Seoul', 'L7 Myeongdong by Lotte',
+  // Amsterdam
+  'Andaz Amsterdam Prinsengracht', 'INK Hotel Amsterdam',
+  // Rome
+  'Hotel de Russie', 'Hotel Artemide',
+  // Chicago
+  'The Westin Michigan Avenue', 'Kimpton Gray Hotel',
+  // Miami
+  'The Betsy Hotel', 'Brickell City Centre Hotel',
+  // Seattle
+  'Hotel Monaco Seattle', 'Kimpton Alexis Hotel',
+  // Boston
+  'Liberty Hotel', 'The Boxer Boston',
+  // Frankfurt
+  'The Westin Grand Frankfurt',
+  // Toronto
+  'Hotel Le Germain Toronto',
+  // Vancouver
+  'Opus Hotel Vancouver',
+  // Madrid
+  'Hotel Urso Madrid',
+  // San Francisco
+  'Hotel Zephyr', 'The Marker San Francisco',
+])
+
+// pet fee per night (USD) keyed by hotel name; unlisted pet-friendly hotels default to $35
+const PET_FEE_MAP = {
+  'Hôtel Plaza Athénée': 75, 'The Savoy': 75, 'Park Hyatt Tokyo': 65,
+  'The Plaza Hotel': 75, 'Shutters on the Beach': 65, 'Royal Hawaiian Hotel': 60,
+  'Burj Al Arab': 100, 'Address Downtown Dubai': 50,
+  'The Fullerton Hotel Singapore': 55, 'Mandarin Oriental Bangkok': 60,
+  'Park Hyatt Sydney': 65, 'Lotte Hotel Seoul': 45,
+  'Waldorf Astoria Amsterdam': 70, 'Hotel de Russie': 70,
+  'Marriott London Grosvenor Square': 50, 'The Prince Gallery Tokyo Kioicho': 65,
+  'The Standard High Line': 40, 'Freehand Los Angeles': 30,
+  'Outrigger Reef Waikiki Beach': 45, 'Rove Downtown Dubai': 25,
+  'Park Hotel Clarke Quay': 30, 'The Quarter Ladprao': 20,
+  'The Old Clare Hotel': 35, 'L7 Myeongdong by Lotte': 35,
+  'Andaz Amsterdam Prinsengracht': 45, 'INK Hotel Amsterdam': 30,
+  'Hotel Artemide': 35, 'Novotel Paris Centre': 25,
+}
+
+const HIGH_TIER_PET_AMENITIES = [
+  'Pet-Friendly', 'Pet Spa', 'Pet Sitting', 'Dog Park',
+  'Pet Beds & Bowls', 'Vet on Call', 'Pet Room Service',
+]
+const MID_TIER_PET_AMENITIES = [
+  'Pet-Friendly', 'Dog Park', 'Pet Walking Service',
+  'Pet Beds & Bowls', 'Outdoor Space',
+]
+const BASIC_PET_AMENITIES = ['Pet-Friendly', 'Outdoor Space', 'Pet Beds & Bowls']
+
+function getPetAmenities(petFeePerNight) {
+  if (petFeePerNight >= 60) return HIGH_TIER_PET_AMENITIES
+  if (petFeePerNight >= 35) return MID_TIER_PET_AMENITIES
+  return BASIC_PET_AMENITIES
+}
+
+function augmentWithPetInfo(hotel) {
+  const petFriendly = PET_FRIENDLY_HOTELS.has(hotel.name)
+  const petFeePerNight = petFriendly ? (PET_FEE_MAP[hotel.name] ?? 35) : null
+  return {
+    ...hotel,
+    petFriendly,
+    petFeePerNight,
+    petAmenities: petFriendly ? getPetAmenities(petFeePerNight) : [],
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+
 async function searchHotelsViaApi(searchParams) {
   if (!HOTEL_API_BASE_URL) {
     throw new Error('VITE_HOTEL_API_BASE_URL is not configured.')
@@ -327,22 +422,63 @@ async function searchHotelsViaApi(searchParams) {
     .sort((left, right) => left.pricePerNight - right.pricePerNight)
 }
 
-export const hotelService = {
-  async search({ destination, fromDate, toDate, adults, children }) {
-    const searchParams = { destination, fromDate, toDate, adults, children }
+function searchHotelsFromInventory(searchParams) {
+  const normalizedDest = normalizeDestination(searchParams.destination)
+  const nights = calcNights(searchParams.fromDate, searchParams.toDate)
 
+  const hotelDefs = HOTEL_INVENTORY[normalizedDest]
+  if (!hotelDefs || hotelDefs.length === 0) {
+    throw new Error(`No hotels found for "${searchParams.destination}". Try a major city name or airport code.`)
+  }
+
+  return hotelDefs.map((def, idx) => ({
+    id: `LOCAL-${normalizedDest.replace(/[^a-z]/gi, '')}-${idx}`,
+    name: def.name,
+    location: normalizedDest,
+    stars: def.stars,
+    pricePerNight: def.baseRate,
+    totalPrice: def.baseRate * nights,
+    nights,
+    checkIn: searchParams.fromDate,
+    checkOut: searchParams.toDate,
+    amenities: def.amenities,
+    rating: def.rating,
+    reviews: def.reviews,
+    roomType: def.roomType,
+    imageIndex: def.imageIndex,
+    imageUrl: null,
+  }))
+}
+
+export const hotelService = {
+  async search({ destination, fromDate, toDate, adults, children, travelingWithPets = false, petCount = 1, petType = 'dog' }) {
+    const searchParams = { destination, fromDate, toDate, adults, children, travelingWithPets, petCount, petType }
+
+    let hotels
     try {
-      const hotels = await searchHotelsViaApi(searchParams)
+      hotels = await searchHotelsViaApi(searchParams)
       if (hotels.length === 0) {
         throw new Error('No hotels returned from the hotel API.')
       }
-
-      return hotels
-    } catch (error) {
-      if (isTimeoutError(error)) {
+    } catch (apiError) {
+      if (isTimeoutError(apiError)) {
         throw new Error('Hotel search timed out. Please try again or narrow your destination/dates.')
       }
-      throw error
+      // Fall back to local inventory when the API is unavailable/unconfigured
+      hotels = searchHotelsFromInventory(searchParams)
     }
+
+    // Augment all hotels with pet-friendly info
+    hotels = hotels.map(augmentWithPetInfo)
+
+    // When traveling with pets, keep only pet-friendly hotels
+    if (travelingWithPets) {
+      hotels = hotels.filter((h) => h.petFriendly)
+      if (hotels.length === 0) {
+        throw new Error(`No pet-friendly hotels found for "${destination}". Try a different destination.`)
+      }
+    }
+
+    return hotels
   },
 }

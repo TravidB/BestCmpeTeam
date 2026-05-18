@@ -2,7 +2,7 @@
 # SQLALCHEMY MODELS (Zone 2 of ERD)
 # ==========================================
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Date, Float
+from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, Date, Float
 from sqlalchemy.orm import foreign, relationship
 from app.core.database import Base # Import Base from your core config
 
@@ -11,6 +11,9 @@ class HotelMaster(Base):
     __tablename__ = "hotel_master"
     Hotel_Code = Column(Integer, primary_key=True, index=True, autoincrement=True)
     Hotel_Name = Column(String, nullable=False)
+    City = Column(String, nullable=True)
+    Country = Column(String, nullable=True)
+    Pet_Friendly = Column(Boolean, default=False, nullable=True)
 
 
 class User(Base):
@@ -48,6 +51,9 @@ class HotelReservation(Base):
     Check_Out_Date = Column(Date, nullable=False)
     Check_Out_Time = Column(String, nullable=True)
     Rate = Column(Float, nullable=True)
+    Pet_Count = Column(Integer, nullable=True, default=0)
+    Pet_Type = Column(String, nullable=True)
+    Pet_Fee = Column(Float, nullable=True, default=0.0)
 
     booking = relationship("Booking", back_populates="hotel_reservations")
     hotel = relationship(

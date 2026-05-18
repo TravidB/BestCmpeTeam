@@ -12,6 +12,9 @@ export function useSearch() {
     toDate: '',
     adults: 1,
     children: 0,
+    travelingWithPets: false,
+    petCount: 1,
+    petType: 'dog',
   }
 
   const searchParams = reactive({

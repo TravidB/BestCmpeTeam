@@ -94,12 +94,19 @@ onMounted(() => {
           <h3 class="trip-section__title">Hotel Details</h3>
           <p v-if="trip.hotelReservations.length === 0" class="trip-section__empty">No hotel saved for this trip.</p>
           <div v-else class="reservation-grid">
-            <div v-for="hotel in trip.hotelReservations" :key="`${trip.bookingId}-${hotel.Reservation_No}`" class="reservation-card">
-              <div class="reservation-card__title">Hotel Reservation</div>
-              <div><strong>Hotal Name:</strong> {{ hotel.Hotel_Name || 'Hotel name unavailable' }}</div>
+            <div v-for="hotel in trip.hotelReservations" :key="`${trip.bookingId}-${hotel.Reservation_No}`" class="reservation-card" :class="{ 'reservation-card--pet': hotel.Pet_Count > 0 }">
+              <div class="reservation-card__title">
+                Hotel Reservation
+                <span v-if="hotel.Pet_Count > 0" class="pet-pill">🐾 Pet Stay</span>
+              </div>
+              <div><strong>Hotel Name:</strong> {{ hotel.Hotel_Name || 'Hotel name unavailable' }}</div>
               <div>Check in: {{ formatDate(hotel.Check_In_Date) }} {{ hotel.Check_In_Time }}</div>
               <div>Check out: {{ formatDate(hotel.Check_Out_Date) }} {{ hotel.Check_Out_Time }}</div>
               <div>Rate: ${{ Number(hotel.Rate || 0).toLocaleString() }}</div>
+              <div v-if="hotel.Pet_Count > 0" class="pet-details">
+                <strong>Pets:</strong> {{ hotel.Pet_Count }} {{ hotel.Pet_Type || 'pet' }}(s) ·
+                Pet fees: ${{ Number(hotel.Pet_Fee || 0).toLocaleString() }}
+              </div>
             </div>
           </div>
         </section>
@@ -248,6 +255,30 @@ onMounted(() => {
 .reservation-card__title {
   font-weight: 700;
   color: var(--color-primary-dark);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.reservation-card--pet {
+  border-color: #b7e4c7;
+  background: #f0fdf4;
+}
+
+.pet-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: #d8f3dc;
+  color: #1b4332;
+  padding: 2px 7px;
+  border-radius: 20px;
+}
+
+.pet-details {
+  margin-top: 2px;
+  font-size: 0.85rem;
+  color: #2d6a4f;
+  font-weight: 500;
 }
 
 @media (max-width: 768px) {
