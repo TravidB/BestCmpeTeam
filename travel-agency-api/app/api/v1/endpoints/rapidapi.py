@@ -1,9 +1,92 @@
+import math
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.core.rapidapi_client import RapidApiError, get_rapidapi_client
 from app.services.rapidapi_service import RapidApiService
 
 router = APIRouter(prefix="", tags=["rapidapi"])
+
+# ── Geocode / Walking-route helpers ────────────────────────────────────────────
+
+_CITY_COORDS: dict[str, tuple[float, float]] = {
+    "new york": (40.7128, -74.0060),
+    "los angeles": (34.0522, -118.2437),
+    "san francisco": (37.7749, -122.4194),
+    "paris": (48.8566, 2.3522),
+    "london": (51.5074, -0.1278),
+    "tokyo": (35.6762, 139.6503),
+    "honolulu": (21.3069, -157.8583),
+    "chicago": (41.8781, -87.6298),
+    "miami": (25.7617, -80.1918),
+    "seattle": (47.6062, -122.3321),
+    "boston": (42.3601, -71.0589),
+    "dubai": (25.2048, 55.2708),
+    "singapore": (1.3521, 103.8198),
+    "sydney": (-33.8688, 151.2093),
+    "seoul": (37.5665, 126.9780),
+    "bangkok": (13.7563, 100.5018),
+    "frankfurt": (50.1109, 8.6821),
+    "amsterdam": (52.3676, 4.9041),
+    "toronto": (43.6532, -79.3832),
+    "vancouver": (49.2827, -123.1207),
+    "madrid": (40.4168, -3.7038),
+    "rome": (41.9028, 12.4964),
+}
+
+def _haversine_miles(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    R = 3958.8
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlam = math.radians(lon2 - lon1)
+    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlam / 2) ** 2
+    return 2 * R * math.asin(math.sqrt(a))
+
+
+@router.get("/geocode", summary="Geocode a location name to lat/lon", tags=["geocode"])
+async def geocode(text: str = Query(..., description="Location name, e.g. 'Central Park New York'")):
+    key = text.lower().strip()
+    for city, (lat, lon) in _CITY_COORDS.items():
+        if city in key or key in city:
+            return {"lat": lat, "lon": lon, "display_name": city.title(), "source": "local"}
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(
+                "https://nominatim.openstreetmap.org/search",
+                params={"q": text, "format": "json", "limit": 1},
+                headers={"User-Agent": "TravelEase/1.0"},
+            )
+            data = resp.json()
+            if data:
+                return {
+                    "lat": float(data[0]["lat"]),
+                    "lon": float(data[0]["lon"]),
+                    "display_name": data[0]["display_name"],
+                    "source": "nominatim",
+                }
+    except Exception:
+        pass
+    raise HTTPException(status_code=404, detail=f"invalid geocode, no location found for: {text}")
+
+
+@router.get("/walking-route", summary="Calculate walking distance between two coordinates", tags=["geocode"])
+async def walking_route(
+    start_lat: float = Query(...),
+    start_lon: float = Query(...),
+    end_lat: float = Query(...),
+    end_lon: float = Query(...),
+):
+    dist_miles = _haversine_miles(start_lat, start_lon, end_lat, end_lon)
+    dist_km = round(dist_miles * 1.60934, 2)
+    dist_miles = round(dist_miles, 2)
+    if dist_miles > 3.0:
+        return {
+            "distance_miles": dist_miles,
+            "distance_km": dist_km,
+            "walkable": False,
+            "message": "invalid walking route — distance too far, consider alternate transportation",
+        }
+    return {"distance_miles": dist_miles, "distance_km": dist_km, "walkable": True}
 
 def get_rapidapi_service() -> RapidApiService:
     return RapidApiService(get_rapidapi_client())

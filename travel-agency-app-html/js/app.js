@@ -3,6 +3,7 @@ import { auth } from './auth.js'
 import { hotelService } from './hotel-service.js'
 import { flightService } from './flight-service.js'
 import { bookingService } from './booking-service.js'
+import { attractionService, getCityCoords } from './attraction-service.js'
 
 // ── State ──────────────────────────────────────────────────────────────────
 const state = {
@@ -16,6 +17,8 @@ const state = {
   bookingError: '',
   isBooking: false,
 }
+
+let _attractionMap = null
 
 // ── DOM helpers ────────────────────────────────────────────────────────────
 const $ = (id) => document.getElementById(id)
@@ -236,9 +239,8 @@ async function handleSearch() {
 
   const searchActivities = async () => {
     try {
-      const data = await fetch(`http://localhost:8000/api/v1/attractions/search?start_date=${p.fromDate}&end_date=${p.toDate}&dest_name=${encodeURIComponent(p.destination)}&country_name=United+States`)
-      if (data.ok) { const json = await data.json(); state.results.activities = Array.isArray(json) ? json : (json.products || json.results || json.data || []) }
-    } catch { /* activities optional */ } finally { setLoading('activities', false); renderActivities() }
+      state.results.activities = attractionService.getAttractions(p.destination)
+    } catch { /* attractions optional */ } finally { setLoading('activities', false); renderActivities() }
   }
 
   await Promise.all([searchFlights(), searchHotels(), searchActivities()])
@@ -277,6 +279,7 @@ function switchTab(tab) {
   ;['flights','hotels','activities'].forEach((t) => {
     const el = $(`${t}-panel`); el && el.classList.toggle('hidden', t !== tab)
   })
+  if (tab === 'activities' && _attractionMap) _attractionMap.invalidateSize()
 }
 
 function updateTabCounts() {
@@ -447,27 +450,76 @@ function hotelCardHTML(h, p) {
 }
 
 // ── Render activities ──────────────────────────────────────────────────────
+const MARKER_COLORS = { park: '#276749', beach: '#1565c0', petcafe: '#e65100', trail: '#6a1b9a', petstore: '#880e4f' }
+
+function _makeMarkerIcon(icon, color, size = 32) {
+  return L.divIcon({
+    html: `<div style="background:${color};color:#fff;border-radius:50%;width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;font-size:${Math.round(size * 0.5)}px;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.4)">${icon}</div>`,
+    className: '',
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    popupAnchor: [0, -(size / 2 + 4)],
+  })
+}
+
 function renderActivities() {
   const panel = $('activities-panel')
   const items = state.results.activities
+
+  if (_attractionMap) { _attractionMap.remove(); _attractionMap = null }
+
   if (!items.length) {
-    panel.innerHTML = `<div class="state-msg"><span class="state-msg-icon">🎯</span><p>No activities found for this destination.</p></div>`
+    panel.innerHTML = `<div class="state-msg"><span class="state-msg-icon">🐾</span><p>No pet-friendly attractions found for this destination.</p></div>`
     return
   }
-  panel.innerHTML = items.slice(0, 20).map((a) => `
-    <div class="activity-card">
+
+  const dest = state.params.destination
+  const cityInfo = getCityCoords(dest)
+  const centerLat = cityInfo?.lat ?? items[0].lat
+  const centerLon = cityInfo?.lon ?? items[0].lon
+
+  panel.innerHTML = `
+    <div class="attractions-header">
+      <span class="attractions-title">Pet-friendly spots near ${dest}</span>
+      <span class="attractions-sub">${items.length} attractions · sorted by distance</span>
+    </div>
+    <div id="attraction-map" class="attraction-map"></div>
+    ${items.map((a) => `
+    <div class="activity-card attraction-card">
       <div class="activity-card__header">
-        <div class="activity-icon">🎯</div>
+        <div class="activity-icon">${a.meta.icon}</div>
         <div style="flex:1">
-          <div class="activity-name">${a.name || a.title || 'Activity'}</div>
-          <div class="activity-meta">${a.location || ''} · ${a.duration || ''}</div>
+          <div class="activity-name">${a.name}</div>
+          <div class="activity-meta">
+            <span class="type-badge type-badge--${a.type}">${a.meta.label}</span>
+            <span class="dist-text">· ${a.distanceMiles} mi (${a.distanceKm} km) from city centre</span>
+          </div>
+          <div class="activity-desc">${a.description}</div>
         </div>
-        <div class="activity-price">
-          <div class="activity-price-main">$${fmt(a.min_price || a.amount || a.price || 0)}</div>
-          <div class="activity-price-sub">per person</div>
+        <div class="walk-badge ${a.walkable ? 'walk-badge--walkable' : 'walk-badge--drive'}">
+          ${a.walkable ? '🚶 Walkable' : '🚗 Drive'}
         </div>
       </div>
-    </div>`).join('')
+    </div>`).join('')}
+  `
+
+  _attractionMap = L.map('attraction-map', { scrollWheelZoom: false }).setView([centerLat, centerLon], 13)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 18,
+  }).addTo(_attractionMap)
+
+  if (cityInfo) {
+    L.marker([cityInfo.lat, cityInfo.lon], { icon: _makeMarkerIcon('📍', '#1a365d', 36) })
+      .addTo(_attractionMap)
+      .bindPopup(`<b>${cityInfo.city}</b><br><small>City Centre</small>`)
+  }
+
+  items.forEach((a) => {
+    L.marker([a.lat, a.lon], { icon: _makeMarkerIcon(a.meta.icon, MARKER_COLORS[a.type] || '#555') })
+      .addTo(_attractionMap)
+      .bindPopup(`<b>${a.name}</b><br><small>${a.meta.label} · ${a.distanceMiles} mi</small><br><small>${a.walkable ? '🚶 Walkable' : '🚗 Drive'}</small>`)
+  })
 }
 
 // ── Summary panel ──────────────────────────────────────────────────────────
