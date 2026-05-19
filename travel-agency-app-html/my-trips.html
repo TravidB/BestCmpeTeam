@@ -85,6 +85,18 @@
       padding: 1rem 1.2rem; border-radius: 8px; margin-bottom: 1rem;
     }
 
+    /* Edit modal */
+    .edit-modal-card { max-width: 500px; width: 100%; }
+    .edit-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+    .edit-field { display: flex; flex-direction: column; gap: .3rem; }
+    .edit-field label { font-size: .8rem; font-weight: 600; color: var(--color-text); }
+    .edit-field input, .edit-field select {
+      padding: .4rem .6rem; border: 1px solid var(--color-border);
+      border-radius: 6px; font-size: .85rem; background: #fff; width: 100%; box-sizing: border-box;
+    }
+    .edit-section-title { font-size: .78rem; font-weight: 700; color: var(--color-text-muted);
+      text-transform: uppercase; letter-spacing: .06em; margin: .9rem 0 .4rem; }
+
     /* Toast */
     #toast {
       position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
@@ -125,6 +137,90 @@
       <div class="modal-actions">
         <button id="auth-close" class="btn-cancel" type="button">Cancel</button>
         <button id="auth-submit" class="btn-submit" type="submit">Sign In</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ Edit Booking Modal ═════════════════════════════════════════════════ -->
+<div id="edit-modal" class="overlay hidden">
+  <div class="modal-card edit-modal-card">
+    <h2>Edit Booking</h2>
+    <form id="edit-form">
+      <div class="edit-section-title">Trip</div>
+      <div class="edit-field">
+        <label for="edit-trip-type">Trip Type</label>
+        <select id="edit-trip-type">
+          <option value="ROUNDTRIP">Roundtrip</option>
+          <option value="ONEWAY">One-way</option>
+          <option value="HOTEL_ONLY">Hotel Only</option>
+        </select>
+      </div>
+
+      <div class="edit-section-title">Route</div>
+      <div class="edit-grid-2">
+        <div class="edit-field">
+          <label for="edit-origin">From (airport code)</label>
+          <input id="edit-origin" type="text" placeholder="e.g. JFK">
+        </div>
+        <div class="edit-field">
+          <label for="edit-destination">To (airport code)</label>
+          <input id="edit-destination" type="text" placeholder="e.g. LAX">
+        </div>
+      </div>
+
+      <div class="edit-section-title">Dates</div>
+      <div class="edit-grid-2">
+        <div class="edit-field">
+          <label for="edit-depart-date">Departure</label>
+          <input id="edit-depart-date" type="date">
+        </div>
+        <div class="edit-field">
+          <label for="edit-return-date">Return</label>
+          <input id="edit-return-date" type="date">
+        </div>
+      </div>
+
+      <div class="edit-section-title">Travelers</div>
+      <div class="edit-grid-2">
+        <div class="edit-field">
+          <label for="edit-adults">Adults</label>
+          <input id="edit-adults" type="number" min="1" max="9" value="1">
+        </div>
+        <div class="edit-field">
+          <label for="edit-children">Children</label>
+          <input id="edit-children" type="number" min="0" max="9" value="0">
+        </div>
+      </div>
+
+      <div class="edit-section-title">Pets</div>
+      <div class="edit-field">
+        <label for="edit-pets">Traveling with Pets?</label>
+        <select id="edit-pets">
+          <option value="no">No pets</option>
+          <option value="yes">Yes 🐾</option>
+        </select>
+      </div>
+      <div id="edit-pet-fields" class="edit-grid-2 hidden">
+        <div class="edit-field">
+          <label for="edit-pet-type">Pet Type</label>
+          <select id="edit-pet-type">
+            <option value="dog">Dog 🐶</option>
+            <option value="cat">Cat 🐱</option>
+            <option value="rabbit">Rabbit 🐰</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="edit-field">
+          <label for="edit-pet-count"># Pets</label>
+          <input id="edit-pet-count" type="number" min="1" max="5" value="1">
+        </div>
+      </div>
+
+      <p id="edit-error" class="auth-error hidden" style="margin-top:.75rem"></p>
+      <div class="modal-actions" style="margin-top:1rem">
+        <button id="edit-cancel" class="btn-cancel" type="button">Cancel</button>
+        <button id="edit-save" class="btn-submit" type="submit">Save Changes</button>
       </div>
     </form>
   </div>

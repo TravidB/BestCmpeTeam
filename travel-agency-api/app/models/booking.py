@@ -33,9 +33,12 @@ class Booking(Base):
     __tablename__ = "bookings"
     Booking_Id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     User_Id = Column(Integer, ForeignKey("users.User_ID"), nullable=False)
-    Agent_Id = Column(Integer, nullable=True) # Assuming Agents table is separate
+    Agent_Id = Column(Integer, nullable=True)
     Start_Date = Column(Date, nullable=False)
     End_Date = Column(Date, nullable=False)
+    Adults = Column(Integer, default=1)
+    Children = Column(Integer, default=0)
+    Trip_Type = Column(String(20), default='ROUNDTRIP')
 
     # Relationships
     user = relationship("User", back_populates="bookings")

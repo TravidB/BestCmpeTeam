@@ -90,16 +90,40 @@ export const bookingService = {
       bookingId: b.Booking_Id ?? b.booking_id ?? b.id,
       startDate: b.Start_Date ?? b.start_date,
       endDate: b.End_Date ?? b.end_date,
+      adults: b.Adults ?? b.adults ?? 1,
+      children: b.Children ?? b.children ?? 0,
+      tripType: b.Trip_Type ?? b.trip_type ?? 'ROUNDTRIP',
       user: b.user,
       hotelReservations: b.hotel_reservations || [],
       flightReservations: b.flight_reservations || [],
     })).sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
   },
 
-  async updateBooking(bookingId, { startDate, endDate }) {
+  async updateBooking(bookingId, { startDate, endDate, adults, children, tripType }) {
     return api.patch(`/bookings/${bookingId}`, {
       ...(startDate ? { Start_Date: startDate } : {}),
       ...(endDate ? { End_Date: endDate } : {}),
+      ...(adults != null ? { Adults: adults } : {}),
+      ...(children != null ? { Children: children } : {}),
+      ...(tripType ? { Trip_Type: tripType } : {}),
+    })
+  },
+
+  async updateFlightReservation(bookingId, reservationNo, { origin, destination, departureDate }) {
+    const clean = (v) => String(v || '').trim().toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3)
+    return api.patch(`/bookings/${bookingId}/flight-reservations/${reservationNo}`, {
+      ...(origin ? { Origin_Airport_Code: clean(origin) } : {}),
+      ...(destination ? { Destination_Airport_Code: clean(destination) } : {}),
+      ...(departureDate ? { Departure_Date: departureDate, Arrive_Date: departureDate } : {}),
+    })
+  },
+
+  async updateHotelReservation(bookingId, reservationNo, { checkIn, checkOut, petCount, petType }) {
+    return api.patch(`/bookings/${bookingId}/hotel-reservations/${reservationNo}`, {
+      ...(checkIn ? { Check_In_Date: checkIn } : {}),
+      ...(checkOut ? { Check_Out_Date: checkOut } : {}),
+      ...(petCount != null ? { Pet_Count: petCount } : {}),
+      ...(petType != null ? { Pet_Type: petType } : {}),
     })
   },
 

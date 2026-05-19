@@ -7,7 +7,7 @@ const state = {
   tenant: null,
   bookings: [],
   isLoading: false,
-  editingId: null,
+  editingBooking: null,
 }
 
 // ── Tenant ─────────────────────────────────────────────────────────────────
@@ -200,7 +200,7 @@ function bookingCardHTML(b) {
   const flights = (b.flightReservations || []).map(flightBadgeHTML).join('')
   const hotels = (b.hotelReservations || []).map(hotelBadgeHTML).join('')
   const statusClass = reservationStatusClass(b.startDate)
-  const isEditing = state.editingId === id
+  const tripLabel = b.tripType === 'ONEWAY' ? 'One-way' : b.tripType === 'HOTEL_ONLY' ? 'Hotel Only' : 'Roundtrip'
 
   return `
     <div class="booking-card ${statusClass}" data-booking-id="${id}">
@@ -208,9 +208,10 @@ function bookingCardHTML(b) {
         <div class="booking-meta">
           <span class="booking-id">Booking #${id}</span>
           <span class="booking-dates">${fmtDate(b.startDate)}${b.endDate && b.endDate !== b.startDate ? ' → ' + fmtDate(b.endDate) : ''}</span>
+          <span class="booking-dates">${tripLabel} · ${b.adults ?? 1} adult${(b.adults ?? 1) !== 1 ? 's' : ''}${b.children ? ' · ' + b.children + ' child' + (b.children !== 1 ? 'ren' : '') : ''}</span>
         </div>
         <div class="booking-actions">
-          <button class="btn btn--sm btn--outline edit-btn" data-id="${id}" title="Edit dates">
+          <button class="btn btn--sm btn--outline edit-btn" data-id="${id}" title="Edit booking">
             ✏️ Edit
           </button>
           <button class="btn btn--sm btn--danger delete-btn" data-id="${id}" title="Delete booking">
@@ -218,17 +219,6 @@ function bookingCardHTML(b) {
           </button>
         </div>
       </div>
-
-      ${isEditing ? `
-      <div class="booking-edit-form">
-        <label>Start Date <input type="date" class="edit-start-date" value="${b.startDate || ''}"></label>
-        <label>End Date <input type="date" class="edit-end-date" value="${b.endDate || ''}"></label>
-        <div class="edit-actions">
-          <button class="btn btn--primary btn--sm save-btn" data-id="${id}">Save</button>
-          <button class="btn btn--sm cancel-btn" data-id="${id}">Cancel</button>
-        </div>
-      </div>` : ''}
-
       <div class="booking-reservations">
         ${flights}
         ${hotels}
@@ -260,20 +250,8 @@ function renderBookings() {
 function attachCardListeners(container) {
   container.querySelectorAll('.edit-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const id = btn.dataset.id
-      state.editingId = state.editingId === id ? null : id
-      renderBookings()
-    })
-  })
-
-  container.querySelectorAll('.save-btn').forEach(btn => {
-    btn.addEventListener('click', () => saveEdit(btn.closest('.booking-card')))
-  })
-
-  container.querySelectorAll('.cancel-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      state.editingId = null
-      renderBookings()
+      const booking = state.bookings.find(b => String(b.bookingId) === String(btn.dataset.id))
+      if (booking) openEditModal(booking)
     })
   })
 
@@ -282,29 +260,96 @@ function attachCardListeners(container) {
   })
 }
 
-async function saveEdit(card) {
-  const id = card?.dataset?.bookingId
-  if (!id) return
+function openEditModal(booking) {
+  state.editingBooking = booking
 
-  const startDate = card.querySelector('.edit-start-date')?.value
-  const endDate = card.querySelector('.edit-end-date')?.value
+  const firstFlight = (booking.flightReservations || [])[0]
+  const firstHotel = (booking.hotelReservations || [])[0]
+  const hasPets = firstHotel ? Number(firstHotel.Pet_Count ?? 0) > 0 : false
 
-  const saveBtn = card.querySelector('.save-btn')
-  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…' }
+  document.getElementById('edit-trip-type').value = booking.tripType || 'ROUNDTRIP'
+  document.getElementById('edit-origin').value = firstFlight?.Origin_Airport_Code ?? ''
+  document.getElementById('edit-destination').value = firstFlight?.Destination_Airport_Code ?? ''
+  document.getElementById('edit-depart-date').value = booking.startDate || ''
+  document.getElementById('edit-return-date').value = booking.endDate || ''
+  document.getElementById('edit-adults').value = booking.adults ?? 1
+  document.getElementById('edit-children').value = booking.children ?? 0
+  document.getElementById('edit-pets').value = hasPets ? 'yes' : 'no'
+  document.getElementById('edit-pet-type').value = firstHotel?.Pet_Type ?? 'dog'
+  document.getElementById('edit-pet-count').value = firstHotel?.Pet_Count ?? 1
+  document.getElementById('edit-pet-fields').classList.toggle('hidden', !hasPets)
+
+  const errEl = document.getElementById('edit-error')
+  errEl.textContent = ''; errEl.classList.add('hidden')
+
+  document.getElementById('edit-modal').classList.remove('hidden')
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.add('hidden')
+  state.editingBooking = null
+}
+
+async function saveEditModal(e) {
+  e.preventDefault()
+  const b = state.editingBooking
+  if (!b) return
+
+  const tripType = document.getElementById('edit-trip-type').value
+  const origin = document.getElementById('edit-origin').value.trim()
+  const destination = document.getElementById('edit-destination').value.trim()
+  const departDate = document.getElementById('edit-depart-date').value
+  const returnDate = document.getElementById('edit-return-date').value
+  const adults = Number(document.getElementById('edit-adults').value) || 1
+  const children = Number(document.getElementById('edit-children').value) || 0
+  const hasPets = document.getElementById('edit-pets').value === 'yes'
+  const petType = document.getElementById('edit-pet-type').value
+  const petCount = hasPets ? (Number(document.getElementById('edit-pet-count').value) || 1) : 0
+
+  const saveBtn = document.getElementById('edit-save')
+  const errEl = document.getElementById('edit-error')
+  saveBtn.disabled = true; saveBtn.textContent = 'Saving…'
+  errEl.classList.add('hidden')
 
   try {
-    await bookingService.updateBooking(id, { startDate, endDate })
-    const booking = state.bookings.find(b => String(b.bookingId) === String(id))
-    if (booking) {
-      if (startDate) booking.startDate = startDate
-      if (endDate) booking.endDate = endDate
+    await bookingService.updateBooking(b.bookingId, {
+      startDate: departDate, endDate: returnDate || departDate, adults, children, tripType,
+    })
+
+    const flights = b.flightReservations || []
+    if (flights[0]) {
+      await bookingService.updateFlightReservation(b.bookingId, flights[0].Reservation_No, {
+        origin, destination, departureDate: departDate,
+      })
     }
-    state.editingId = null
+    if (flights[1]) {
+      // Return flight: reversed route, departs on return date
+      await bookingService.updateFlightReservation(b.bookingId, flights[1].Reservation_No, {
+        origin: destination, destination: origin, departureDate: returnDate || departDate,
+      })
+    }
+
+    for (const h of (b.hotelReservations || [])) {
+      await bookingService.updateHotelReservation(b.bookingId, h.Reservation_No, {
+        checkIn: departDate, checkOut: returnDate || departDate,
+        petCount, petType: hasPets ? petType : '',
+      })
+    }
+
+    // Update local state so re-render reflects changes immediately
+    const local = state.bookings.find(bk => String(bk.bookingId) === String(b.bookingId))
+    if (local) {
+      local.startDate = departDate; local.endDate = returnDate || departDate
+      local.adults = adults; local.children = children; local.tripType = tripType
+    }
+
+    closeEditModal()
     renderBookings()
     showToast('Booking updated successfully.')
   } catch (err) {
-    showToast('Failed to update booking: ' + (err.message || 'Unknown error'), 'error')
-    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save' }
+    errEl.textContent = 'Failed to save: ' + (err.message || 'Unknown error')
+    errEl.classList.remove('hidden')
+    saveBtn.disabled = false; saveBtn.textContent = 'Save Changes'
   }
 }
 
@@ -399,6 +444,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target === e.currentTarget) closeAuthModal()
   })
   document.getElementById('auth-form')?.addEventListener('submit', handleSignIn)
+
+  // Edit modal
+  document.getElementById('edit-cancel')?.addEventListener('click', closeEditModal)
+  document.getElementById('edit-modal')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeEditModal()
+  })
+  document.getElementById('edit-form')?.addEventListener('submit', saveEditModal)
+  document.getElementById('edit-pets')?.addEventListener('change', (e) => {
+    document.getElementById('edit-pet-fields').classList.toggle('hidden', e.target.value !== 'yes')
+  })
 
   if (auth.isAuthenticated()) loadTrips()
   else loadTrips() // will show sign-in prompt

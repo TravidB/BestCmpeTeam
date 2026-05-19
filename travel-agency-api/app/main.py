@@ -39,6 +39,9 @@ def startup():
         for sql in [
             "ALTER TABLE users ADD COLUMN Password_Hash TEXT",
             "ALTER TABLE users ADD COLUMN Is_Admin BOOLEAN NOT NULL DEFAULT 0",
+            "ALTER TABLE bookings ADD COLUMN Adults INTEGER DEFAULT 1",
+            "ALTER TABLE bookings ADD COLUMN Children INTEGER DEFAULT 0",
+            "ALTER TABLE bookings ADD COLUMN Trip_Type TEXT DEFAULT 'ROUNDTRIP'",
         ]:
             try:
                 conn.execute(text(sql))

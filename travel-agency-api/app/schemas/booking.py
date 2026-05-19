@@ -80,6 +80,9 @@ class BookingBase(BaseModel):
     Agent_Id: Optional[int] = None
     Start_Date: date
     End_Date: date
+    Adults: Optional[int] = 1
+    Children: Optional[int] = 0
+    Trip_Type: Optional[str] = 'ROUNDTRIP'
 
 # Schema used when CREATING a new Booking (Request Body)
 class BookingCreate(BookingBase):
@@ -91,6 +94,9 @@ class BookingUpdate(BaseModel):
     Start_Date: Optional[date] = None
     End_Date: Optional[date] = None
     Agent_Id: Optional[int] = None
+    Adults: Optional[int] = None
+    Children: Optional[int] = None
+    Trip_Type: Optional[str] = None
 
 # Schema used when RETURNING a Booking (Response Body)
 class BookingResponse(BookingBase):
