@@ -279,7 +279,7 @@ function switchTab(tab) {
   ;['flights','hotels','activities'].forEach((t) => {
     const el = $(`${t}-panel`); el && el.classList.toggle('hidden', t !== tab)
   })
-  if (tab === 'activities' && _attractionMap) _attractionMap.invalidateSize()
+  if (tab === 'activities' && _attractionMap) setTimeout(() => _attractionMap.invalidateSize(), 50)
 }
 
 function updateTabCounts() {
