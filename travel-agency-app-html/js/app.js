@@ -19,6 +19,9 @@ const state = {
 }
 
 let _attractionMap = null
+let _radiusKm = 25
+let _radiusCircle = null
+let _attractionMarkers = []
 
 // ── DOM helpers ────────────────────────────────────────────────────────────
 const $ = (id) => document.getElementById(id)
@@ -462,29 +465,8 @@ function _makeMarkerIcon(icon, color, size = 32) {
   })
 }
 
-function renderActivities() {
-  const panel = $('activities-panel')
-  const items = state.results.activities
-
-  if (_attractionMap) { _attractionMap.remove(); _attractionMap = null }
-
-  if (!items.length) {
-    panel.innerHTML = `<div class="state-msg"><span class="state-msg-icon">🐾</span><p>No pet-friendly attractions found for this destination.</p></div>`
-    return
-  }
-
-  const dest = state.params.destination
-  const cityInfo = getCityCoords(dest)
-  const centerLat = cityInfo?.lat ?? items[0].lat
-  const centerLon = cityInfo?.lon ?? items[0].lon
-
-  panel.innerHTML = `
-    <div class="attractions-header">
-      <span class="attractions-title">Pet-friendly spots near ${dest}</span>
-      <span class="attractions-sub">${items.length} attractions · sorted by distance</span>
-    </div>
-    <div id="attraction-map" class="attraction-map"></div>
-    ${items.map((a) => `
+function _attractionCardHTML(a) {
+  return `
     <div class="activity-card attraction-card">
       <div class="activity-card__header">
         <div class="activity-icon">${a.meta.icon}</div>
@@ -500,7 +482,78 @@ function renderActivities() {
           ${a.walkable ? '🚶 Walkable' : '🚗 Drive'}
         </div>
       </div>
-    </div>`).join('')}
+    </div>`
+}
+
+function _applyRadius(km, allItems, centerLat, centerLon) {
+  _radiusKm = km
+
+  // Update the radius circle on the map
+  if (_radiusCircle) { _radiusCircle.remove(); _radiusCircle = null }
+  if (_attractionMap) {
+    _radiusCircle = L.circle([centerLat, centerLon], {
+      radius: km * 1000,
+      color: '#1a365d', fillColor: '#1a365d',
+      fillOpacity: 0.04, weight: 1.5, dashArray: '6 4',
+    }).addTo(_attractionMap)
+  }
+
+  // Swap markers: remove all, re-add only those within radius
+  _attractionMarkers.forEach(m => m.remove())
+  _attractionMarkers = []
+  const inRange = allItems.filter(a => a.distanceKm <= km)
+  inRange.forEach((a) => {
+    const m = L.marker([a.lat, a.lon], { icon: _makeMarkerIcon(a.meta.icon, MARKER_COLORS[a.type] || '#555') })
+      .bindPopup(`<b>${a.name}</b><br><small>${a.meta.label} · ${a.distanceMiles} mi</small><br><small>${a.walkable ? '🚶 Walkable' : '🚗 Drive'}</small>`)
+    if (_attractionMap) m.addTo(_attractionMap)
+    _attractionMarkers.push(m)
+  })
+
+  // Update cards and sub-count
+  const cardsEl = $('attraction-cards')
+  const subEl = $('attractions-sub')
+  if (subEl) subEl.textContent = `${inRange.length} attraction${inRange.length !== 1 ? 's' : ''} within ${km} km`
+  if (cardsEl) {
+    cardsEl.innerHTML = inRange.length
+      ? inRange.map(_attractionCardHTML).join('')
+      : `<div class="state-msg"><span class="state-msg-icon">📍</span><p>No attractions within ${km} km — try increasing the range.</p></div>`
+  }
+
+  // Sync tab badge count
+  const badge = $('activities-count')
+  if (badge) { badge.textContent = inRange.length; badge.classList.toggle('hidden', inRange.length === 0) }
+}
+
+function renderActivities() {
+  const panel = $('activities-panel')
+  const items = state.results.activities
+
+  if (_attractionMap) { _attractionMap.remove(); _attractionMap = null }
+  if (_radiusCircle) { _radiusCircle = null }
+  _attractionMarkers = []
+
+  if (!items.length) {
+    panel.innerHTML = `<div class="state-msg"><span class="state-msg-icon">🐾</span><p>No pet-friendly attractions found for this destination.</p></div>`
+    return
+  }
+
+  const dest = state.params.destination
+  const cityInfo = getCityCoords(dest)
+  const centerLat = cityInfo?.lat ?? items[0].lat
+  const centerLon = cityInfo?.lon ?? items[0].lon
+
+  panel.innerHTML = `
+    <div class="attractions-header">
+      <span class="attractions-title">Pet-friendly spots near ${dest}</span>
+      <span id="attractions-sub" class="attractions-sub"></span>
+    </div>
+    <div class="radius-control">
+      <span class="radius-label">Search radius</span>
+      <input type="range" id="radius-slider" class="radius-slider" min="5" max="100" step="5" value="${_radiusKm}">
+      <span id="radius-value" class="radius-value">${_radiusKm} km</span>
+    </div>
+    <div id="attraction-map" class="attraction-map"></div>
+    <div id="attraction-cards"></div>
   `
 
   _attractionMap = L.map('attraction-map', { scrollWheelZoom: false }).setView([centerLat, centerLon], 13)
@@ -515,10 +568,12 @@ function renderActivities() {
       .bindPopup(`<b>${cityInfo.city}</b><br><small>City Centre</small>`)
   }
 
-  items.forEach((a) => {
-    L.marker([a.lat, a.lon], { icon: _makeMarkerIcon(a.meta.icon, MARKER_COLORS[a.type] || '#555') })
-      .addTo(_attractionMap)
-      .bindPopup(`<b>${a.name}</b><br><small>${a.meta.label} · ${a.distanceMiles} mi</small><br><small>${a.walkable ? '🚶 Walkable' : '🚗 Drive'}</small>`)
+  _applyRadius(_radiusKm, items, centerLat, centerLon)
+
+  $('radius-slider').addEventListener('input', (e) => {
+    const km = Number(e.target.value)
+    $('radius-value').textContent = `${km} km`
+    _applyRadius(km, items, centerLat, centerLon)
   })
 }
 
