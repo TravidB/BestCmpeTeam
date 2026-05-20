@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TravelEase</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ══ Tenant Picker Overlay ═════════════════════════════════════════════ -->
+<div id="tenant-overlay" class="overlay hidden">
+  <div class="modal-card">
+    <h2>Welcome to TravelEase ✈️</h2>
+    <p>Choose your travel portal to continue</p>
+    <div id="tenant-grid" class="tenant-grid"></div>
+  </div>
+</div>
+
+<!-- ══ Auth Overlay ══════════════════════════════════════════════════════ -->
+<div id="auth-overlay" class="overlay hidden">
+  <div class="modal-card">
+    <h2 id="auth-title">Sign In</h2>
+    <form id="auth-form" autocomplete="on">
+      <!-- Register-only fields (hidden in sign-in mode) -->
+      <div id="auth-register-fields" class="hidden">
+        <div class="auth-field">
+          <label for="auth-first-name">First Name</label>
+          <input id="auth-first-name" type="text" placeholder="First name" autocomplete="given-name">
+        </div>
+        <div class="auth-field">
+          <label for="auth-last-name">Last Name</label>
+          <input id="auth-last-name" type="text" placeholder="Last name" autocomplete="family-name">
+        </div>
+        <div class="auth-field">
+          <label for="auth-phone">Phone Number <span style="font-weight:400;color:var(--color-text-muted)">(optional)</span></label>
+          <input id="auth-phone" type="tel" placeholder="e.g. 555-123-4567" autocomplete="tel">
+        </div>
+      </div>
+      <div class="auth-field">
+        <label for="auth-email">Email address</label>
+        <input id="auth-email" type="email" placeholder="you@example.com" autocomplete="email" required>
+      </div>
+      <div class="auth-field">
+        <label for="auth-password">Password</label>
+        <input id="auth-password" type="password" placeholder="Password" autocomplete="current-password" required>
+      </div>
+      <p id="auth-error" class="auth-error hidden"></p>
+      <div class="modal-actions">
+        <button id="btn-auth-cancel" class="btn-cancel" type="button">Cancel</button>
+        <button id="btn-auth-submit" class="btn-submit" type="submit">Sign In</button>
+      </div>
+    </form>
+    <p style="text-align:center;margin-top:.75rem;font-size:.82rem">
+      <button id="auth-toggle-link" type="button"
+        style="background:none;border:none;color:var(--color-primary);cursor:pointer;font-size:.82rem;text-decoration:underline">
+        Don't have an account? Register
+      </button>
+    </p>
+  </div>
+</div>
+
+<!-- ══ Header ════════════════════════════════════════════════════════════ -->
+<header class="app-header">
+  <div class="app-header__inner">
+    <div class="brand">
+      <span id="brand-logo" class="brand-logo">✈️</span>
+      <span id="brand-name" class="brand-name">TravelEase</span>
+      <button id="tenant-badge" class="tenant-badge" title="Switch agency"></button>
+    </div>
+    <nav class="nav">
+      <a id="trips-nav-btn" href="my-trips.html" class="nav-link hidden">My Trips</a>
+      <a id="admin-nav-btn" href="admin.html" class="nav-link hidden">⚙️ Admin</a>
+    </nav>
+    <div class="header-actions">
+      <span id="user-badge" class="user-badge hidden"></span>
+      <button id="btn-signin" class="btn-signin">Sign In</button>
+    </div>
+  </div>
+</header>
+
+<!-- ══ Search Panel ═══════════════════════════════════════════════════════ -->
+<section class="search-panel">
+  <div class="search-grid">
+
+    <div class="field field--trip-type">
+      <label class="field__label" for="trip-type">Trip Type</label>
+      <select id="trip-type" class="field__input">
+        <option value="ROUNDTRIP">Roundtrip</option>
+        <option value="ONEWAY">One-way</option>
+        <option value="HOTEL_ONLY">Hotel Only</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="origin">From</label>
+      <div class="location-wrap">
+        <input id="origin" class="field__input" type="text" placeholder="City or airport (e.g. JFK, Paris)" autocomplete="off">
+        <div id="origin-dropdown" class="location-dropdown hidden"></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="destination">To</label>
+      <div class="location-wrap">
+        <input id="destination" class="field__input" type="text" placeholder="City or airport (e.g. LAX, London)" autocomplete="off">
+        <div id="destination-dropdown" class="location-dropdown hidden"></div>
+      </div>
+    </div>
+
+    <div class="field field--narrow" style="flex:0 0 130px">
+      <label class="field__label" for="from-date">Depart</label>
+      <input id="from-date" class="field__input" type="date">
+    </div>
+
+    <div class="field field--narrow" style="flex:0 0 130px">
+      <label class="field__label" for="to-date">Return</label>
+      <input id="to-date" class="field__input" type="date">
+    </div>
+
+    <div class="field field--narrow">
+      <label class="field__label" for="adults">Adults</label>
+      <input id="adults" class="field__input" type="number" min="1" max="9" value="1">
+    </div>
+
+    <div class="field field--narrow">
+      <label class="field__label" for="children">Children</label>
+      <input id="children" class="field__input" type="number" min="0" max="9" value="0">
+    </div>
+
+    <div class="field field--pets">
+      <label class="field__label" for="pets-toggle">With Pets?</label>
+      <select id="pets-toggle" class="field__input">
+        <option value="no">No pets</option>
+        <option value="yes">Yes 🐾</option>
+      </select>
+    </div>
+
+    <!-- Pet detail fields (shown when pets-toggle = yes) -->
+    <div id="pet-fields" class="hidden" style="display:contents">
+      <div class="field field--narrow">
+        <label class="field__label" for="pet-type">Pet Type</label>
+        <select id="pet-type" class="field__input">
+          <option value="dog">Dog 🐶</option>
+          <option value="cat">Cat 🐱</option>
+          <option value="rabbit">Rabbit 🐰</option>
+          <option value="bird">Bird 🦜</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="field field--narrow">
+        <label class="field__label" for="pet-count"># Pets</label>
+        <input id="pet-count" class="field__input" type="number" min="1" max="5" value="1">
+      </div>
+    </div>
+
+    <div class="search-actions">
+      <button id="btn-search" class="btn-search">🔍 Search</button>
+      <button id="btn-clear" class="btn-clear-search">Clear</button>
+    </div>
+  </div>
+  <p id="search-error" class="search-error"></p>
+</section>
+
+<!-- ══ Hero (shown before first search) ══════════════════════════════════ -->
+<section id="hero-section" class="hero">
+  <div class="hero__inner">
+    <h1 id="hero-title" class="hero__title">Find Your Perfect Trip</h1>
+    <p id="hero-sub" class="hero__sub">Flights, hotels &amp; activities — all in one place. Search above to get started.</p>
+    <div id="hero-features" class="hero__features">
+      <div class="hero__feature"><span class="hero__feature-icon">✈️</span> Flights</div>
+      <div class="hero__feature"><span class="hero__feature-icon">🏨</span> Hotels</div>
+      <div class="hero__feature"><span class="hero__feature-icon">🎉</span> Activities</div>
+      <div class="hero__feature"><span class="hero__feature-icon">🐾</span> Pet Friendly</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ Results (hidden until search) ═════════════════════════════════════ -->
+<main id="results-section" class="hidden">
+  <div class="results-layout">
+
+    <!-- Left: tabs + cards -->
+    <div class="results-main">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="flights">
+          ✈️ Flights <span id="flights-count" class="tab-count hidden"></span>
+        </button>
+        <button class="tab-btn" data-tab="hotels">
+          🏨 Hotels <span id="hotels-count" class="tab-count hidden"></span>
+        </button>
+        <button class="tab-btn" data-tab="activities">
+          🎉 Activities <span id="activities-count" class="tab-count hidden"></span>
+        </button>
+      </div>
+
+      <!-- app.js fills these and toggles the `hidden` class -->
+      <div id="flights-panel" class="tab-panel"></div>
+      <div id="hotels-panel" class="tab-panel hidden"></div>
+      <div id="activities-panel" class="tab-panel hidden"></div>
+    </div>
+
+    <!-- Right: Summary / Booking panel -->
+    <aside class="summary-panel">
+      <div class="summary-header">
+        <div class="summary-header-main">
+          <span class="summary-title">✈️ Trip Summary</span>
+        </div>
+        <button id="btn-clear-sel" class="btn-clear-sel">Clear</button>
+      </div>
+
+      <!-- Dynamic content: renderSummary() writes here -->
+      <div id="summary-body"></div>
+
+      <!-- Footer: shown when something is selected -->
+      <div id="summary-footer" class="hidden">
+        <p id="signed-in-badge-empty" style="font-size:.75rem;color:var(--color-text-muted);padding:.5rem 1.2rem 0;margin:0">
+          Sign in to save your booking
+        </p>
+
+        <div class="summary-total">
+          <span class="total-label">Total</span>
+          <span id="summary-total-price" class="total-price">$0</span>
+        </div>
+
+        <p id="booking-error" class="booking-error hidden"></p>
+
+        <div id="booking-confirmation" class="booking-confirmation hidden">
+          <span class="confirm-icon">✅</span>
+          <div>
+            <p class="confirm-title">Booking Confirmed!</p>
+            <p id="confirm-ref" class="confirm-ref"></p>
+            <p class="confirm-sub"><a href="my-trips.html">View My Trips →</a></p>
+          </div>
+        </div>
+
+        <button id="btn-book" class="btn-book">🎫 Book Now</button>
+      </div>
+    </aside>
+
+  </div>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
