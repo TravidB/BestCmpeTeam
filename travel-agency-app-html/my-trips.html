@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Trips — TravelEase</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css">
   <style>
     /* ── My Trips additional styles ────────────────────────────────────── */
@@ -97,6 +98,35 @@
     .edit-section-title { font-size: .78rem; font-weight: 700; color: var(--color-text-muted);
       text-transform: uppercase; letter-spacing: .06em; margin: .9rem 0 .4rem; }
 
+    /* Attractions modal */
+    .attractions-modal-card {
+      width: min(840px, 100%); max-height: 90vh;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .attractions-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: .75rem;
+    }
+    .attractions-modal-header h2 { margin: 0; font-size: 1.2rem; }
+    .attractions-modal-header .btn-close {
+      background: none; border: none; font-size: 1.2rem; cursor: pointer;
+      color: var(--color-text-muted); line-height: 1; padding: .25rem;
+    }
+    #trip-attraction-map {
+      width: 100%; height: 320px; min-height: 320px; flex-shrink: 0;
+      border-radius: 12px; border: 1px solid var(--color-border); z-index: 1;
+    }
+    .trip-radius-row {
+      display: flex; align-items: center; gap: .6rem;
+      padding: .5rem 0; font-size: .82rem; font-weight: 600; color: var(--color-text-muted);
+    }
+    .trip-radius-row input[type=range] { flex: 1; }
+    .trip-radius-val { min-width: 3.5rem; text-align: right; font-weight: 700; color: var(--color-primary); }
+    #trip-attraction-cards {
+      margin-top: .5rem; overflow-y: auto; max-height: 320px;
+      display: flex; flex-direction: column; gap: .45rem;
+    }
+
     /* Toast */
     #toast {
       position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
@@ -139,6 +169,23 @@
         <button id="auth-submit" class="btn-submit" type="submit">Sign In</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ══ Attractions Modal ══════════════════════════════════════════════════ -->
+<div id="attractions-modal" class="overlay hidden">
+  <div class="modal-card attractions-modal-card">
+    <div class="attractions-modal-header">
+      <h2 id="attractions-modal-title">Explore Destination</h2>
+      <button id="attractions-close" class="btn-close" type="button" aria-label="Close">✕</button>
+    </div>
+    <div class="trip-radius-row">
+      <span>Radius:</span>
+      <input id="trip-radius-slider" type="range" min="5" max="100" step="5" value="25">
+      <span id="trip-radius-value" class="trip-radius-val">25 km</span>
+    </div>
+    <div id="trip-attraction-map"></div>
+    <div id="trip-attraction-cards"></div>
   </div>
 </div>
 
@@ -271,6 +318,7 @@
   <div id="trips-container" class="trips-list"></div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module" src="js/my-trips.js"></script>
 </body>
 </html>

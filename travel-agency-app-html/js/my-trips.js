@@ -1,6 +1,7 @@
 import { bookingService } from './booking-service.js'
 import { auth } from './auth.js'
 import { resolveTenant, detectTenantFromHost, ALL_TENANTS } from './config.js'
+import { attractionService, getCityCoords } from './attraction-service.js'
 
 // ── State ──────────────────────────────────────────────────────────────────
 const state = {
@@ -8,6 +9,132 @@ const state = {
   bookings: [],
   isLoading: false,
   editingBooking: null,
+}
+
+// ── Attractions map state ───────────────────────────────────────────────────
+let _tripMap = null
+let _tripRadiusKm = 25
+let _tripCircle = null
+let _tripMarkers = []
+
+const TRIP_MARKER_COLORS = {
+  park: '#276749', beach: '#1565c0', petcafe: '#e65100',
+  trail: '#6a1b9a', petstore: '#880e4f', museum: '#283593',
+}
+
+function _makeTripMarkerIcon(icon, color, size = 32) {
+  return L.divIcon({
+    html: `<div style="background:${color};color:#fff;border-radius:50%;width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;font-size:${Math.round(size * 0.5)}px;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.4)">${icon}</div>`,
+    className: '',
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  })
+}
+
+function _tripAttractionCardHTML(a) {
+  return `
+    <div class="activity-card attraction-card">
+      <div class="activity-card__header">
+        <div class="activity-icon">${a.meta.icon}</div>
+        <div style="flex:1">
+          <div class="activity-name">${a.name}</div>
+          <div class="activity-meta">
+            <span class="type-badge type-badge--${a.type}">${a.meta.label}</span>
+            <span class="dist-text">· ${a.distanceMiles} mi (${a.distanceKm} km) from city centre</span>
+          </div>
+          <div class="activity-desc">${a.description}</div>
+        </div>
+        <div class="walk-badge ${a.walkable ? 'walk-badge--walkable' : 'walk-badge--drive'}">
+          ${a.walkable ? '🚶 Walkable' : '🚗 Drive'}
+        </div>
+      </div>
+    </div>`
+}
+
+function _applyTripRadius(km, allItems, centerLat, centerLon) {
+  _tripRadiusKm = km
+
+  if (_tripCircle) { _tripCircle.remove(); _tripCircle = null }
+  if (_tripMap) {
+    _tripCircle = L.circle([centerLat, centerLon], {
+      radius: km * 1000,
+      color: '#1a365d', fillColor: '#1a365d',
+      fillOpacity: 0.04, weight: 1.5, dashArray: '6 4',
+    }).addTo(_tripMap)
+  }
+
+  _tripMarkers.forEach(m => m.remove())
+  _tripMarkers = []
+  const inRange = allItems.filter(a => a.distanceKm <= km)
+  inRange.forEach(a => {
+    const m = L.marker([a.lat, a.lon], {
+      icon: _makeTripMarkerIcon(a.meta.icon, TRIP_MARKER_COLORS[a.type] || '#555'),
+    }).bindPopup(`<b>${a.name}</b><br><small>${a.meta.label} · ${a.distanceMiles} mi</small><br><small>${a.walkable ? '🚶 Walkable' : '🚗 Drive'}</small>`)
+    if (_tripMap) m.addTo(_tripMap)
+    _tripMarkers.push(m)
+  })
+
+  const cardsEl = document.getElementById('trip-attraction-cards')
+  if (cardsEl) {
+    cardsEl.innerHTML = inRange.length
+      ? inRange.map(_tripAttractionCardHTML).join('')
+      : `<div class="state-msg"><span class="state-msg-icon">📍</span><p>No attractions within ${km} km — try increasing the range.</p></div>`
+  }
+}
+
+function openAttractionsModal(booking) {
+  const firstFlight = (booking.flightReservations || [])[0]
+  const dest = firstFlight?.Destination_Airport_Code
+  const coords = dest ? getCityCoords(dest) : null
+
+  if (!coords) {
+    showToast('No attraction data for this destination.', 'error')
+    return
+  }
+
+  // Tear down previous map instance
+  if (_tripMap) { _tripMap.remove(); _tripMap = null }
+  _tripCircle = null
+  _tripMarkers = []
+
+  const items = attractionService.getAttractions(dest)
+
+  document.getElementById('attractions-modal-title').textContent = `Explore ${coords.city}`
+  document.getElementById('trip-radius-slider').value = 25
+  document.getElementById('trip-radius-value').textContent = '25 km'
+  _tripRadiusKm = 25
+
+  document.getElementById('attractions-modal').classList.remove('hidden')
+
+  setTimeout(() => {
+    const mapEl = document.getElementById('trip-attraction-map')
+    if (!mapEl) return
+
+    _tripMap = L.map(mapEl).setView([coords.lat, coords.lon], 12)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors', maxZoom: 18,
+    }).addTo(_tripMap)
+
+    L.marker([coords.lat, coords.lon], { icon: _makeTripMarkerIcon('📍', '#1a365d', 36) })
+      .addTo(_tripMap)
+      .bindPopup(`<b>${coords.city}</b><br><small>City Centre</small>`)
+
+    _applyTripRadius(25, items, coords.lat, coords.lon)
+    _tripMap.invalidateSize()
+
+    document.getElementById('trip-radius-slider').oninput = (e) => {
+      const km = Number(e.target.value)
+      document.getElementById('trip-radius-value').textContent = `${km} km`
+      _applyTripRadius(km, items, coords.lat, coords.lon)
+    }
+  }, 50)
+}
+
+function closeAttractionsModal() {
+  document.getElementById('attractions-modal').classList.add('hidden')
+  if (_tripMap) { _tripMap.remove(); _tripMap = null }
+  _tripCircle = null
+  _tripMarkers = []
 }
 
 // ── Tenant ─────────────────────────────────────────────────────────────────
@@ -211,6 +338,9 @@ function bookingCardHTML(b) {
           <span class="booking-dates">${tripLabel} · ${b.adults ?? 1} adult${(b.adults ?? 1) !== 1 ? 's' : ''}${b.children ? ' · ' + b.children + ' child' + (b.children !== 1 ? 'ren' : '') : ''}</span>
         </div>
         <div class="booking-actions">
+          <button class="btn btn--sm btn--outline map-btn" data-id="${id}" title="View attractions map">
+            🗺️ Map
+          </button>
           <button class="btn btn--sm btn--outline edit-btn" data-id="${id}" title="Edit booking">
             ✏️ Edit
           </button>
@@ -248,6 +378,13 @@ function renderBookings() {
 }
 
 function attachCardListeners(container) {
+  container.querySelectorAll('.map-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const booking = state.bookings.find(b => String(b.bookingId) === String(btn.dataset.id))
+      if (booking) openAttractionsModal(booking)
+    })
+  })
+
   container.querySelectorAll('.edit-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const booking = state.bookings.find(b => String(b.bookingId) === String(btn.dataset.id))
@@ -444,6 +581,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target === e.currentTarget) closeAuthModal()
   })
   document.getElementById('auth-form')?.addEventListener('submit', handleSignIn)
+
+  // Attractions modal
+  document.getElementById('attractions-close')?.addEventListener('click', closeAttractionsModal)
+  document.getElementById('attractions-modal')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeAttractionsModal()
+  })
 
   // Edit modal
   document.getElementById('edit-cancel')?.addEventListener('click', closeEditModal)
