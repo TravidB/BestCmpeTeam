@@ -95,12 +95,18 @@
 
     <div class="field">
       <label class="field__label" for="origin">From</label>
-      <input id="origin" class="field__input" type="text" placeholder="City or airport (e.g. JFK, Paris)">
+      <div class="location-wrap">
+        <input id="origin" class="field__input" type="text" placeholder="City or airport (e.g. JFK, Paris)" autocomplete="off">
+        <div id="origin-dropdown" class="location-dropdown hidden"></div>
+      </div>
     </div>
 
     <div class="field">
       <label class="field__label" for="destination">To</label>
-      <input id="destination" class="field__input" type="text" placeholder="City or airport (e.g. LAX, London)">
+      <div class="location-wrap">
+        <input id="destination" class="field__input" type="text" placeholder="City or airport (e.g. LAX, London)" autocomplete="off">
+        <div id="destination-dropdown" class="location-dropdown hidden"></div>
+      </div>
     </div>
 
     <div class="field field--narrow" style="flex:0 0 130px">

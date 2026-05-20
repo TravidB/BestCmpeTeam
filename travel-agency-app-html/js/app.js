@@ -23,6 +23,107 @@ let _radiusKm = 25
 let _radiusCircle = null
 let _attractionMarkers = []
 
+// ── Location autocomplete ──────────────────────────────────────────────────
+const POPULAR_DESTINATIONS = [
+  { code: 'JFK', city: 'New York',      country: 'USA',         flag: '🇺🇸' },
+  { code: 'LAX', city: 'Los Angeles',   country: 'USA',         flag: '🇺🇸' },
+  { code: 'LHR', city: 'London',        country: 'UK',          flag: '🇬🇧' },
+  { code: 'CDG', city: 'Paris',         country: 'France',      flag: '🇫🇷' },
+  { code: 'DXB', city: 'Dubai',         country: 'UAE',         flag: '🇦🇪' },
+  { code: 'NRT', city: 'Tokyo',         country: 'Japan',       flag: '🇯🇵' },
+  { code: 'SYD', city: 'Sydney',        country: 'Australia',   flag: '🇦🇺' },
+  { code: 'SIN', city: 'Singapore',     country: 'Singapore',   flag: '🇸🇬' },
+  { code: 'SFO', city: 'San Francisco', country: 'USA',         flag: '🇺🇸' },
+  { code: 'MIA', city: 'Miami',         country: 'USA',         flag: '🇺🇸' },
+  { code: 'ORD', city: 'Chicago',       country: 'USA',         flag: '🇺🇸' },
+  { code: 'HNL', city: 'Honolulu',      country: 'USA',         flag: '🇺🇸' },
+  { code: 'BOS', city: 'Boston',        country: 'USA',         flag: '🇺🇸' },
+  { code: 'SEA', city: 'Seattle',       country: 'USA',         flag: '🇺🇸' },
+  { code: 'ICN', city: 'Seoul',         country: 'South Korea', flag: '🇰🇷' },
+  { code: 'BKK', city: 'Bangkok',       country: 'Thailand',    flag: '🇹🇭' },
+  { code: 'FRA', city: 'Frankfurt',     country: 'Germany',     flag: '🇩🇪' },
+  { code: 'AMS', city: 'Amsterdam',     country: 'Netherlands', flag: '🇳🇱' },
+  { code: 'YYZ', city: 'Toronto',       country: 'Canada',      flag: '🇨🇦' },
+  { code: 'YVR', city: 'Vancouver',     country: 'Canada',      flag: '🇨🇦' },
+  { code: 'MAD', city: 'Madrid',        country: 'Spain',       flag: '🇪🇸' },
+  { code: 'FCO', city: 'Rome',          country: 'Italy',       flag: '🇮🇹' },
+]
+
+const _RECENT_KEY = 'recent_destinations'
+
+function _getRecents() {
+  try { return JSON.parse(localStorage.getItem(_RECENT_KEY) || '[]') } catch { return [] }
+}
+function _saveRecent(item) {
+  const list = _getRecents().filter(r => r.code !== item.code)
+  list.unshift(item)
+  localStorage.setItem(_RECENT_KEY, JSON.stringify(list.slice(0, 5)))
+}
+
+function _locItemHTML(item, recent = false) {
+  return `<div class="loc-item" data-code="${item.code}" tabindex="-1">
+    <span class="loc-flag">${recent ? '🕐' : item.flag}</span>
+    <span class="loc-code">${item.code}</span>
+    <div class="loc-info">
+      <span class="loc-name">${item.city}</span>
+      <span class="loc-country">${item.country}</span>
+    </div>
+  </div>`
+}
+
+function _renderDropdown(inputEl, dropdownEl, nextInputEl) {
+  const query = inputEl.value.trim().toUpperCase()
+  const recents = _getRecents()
+  let html = ''
+
+  if (!query) {
+    if (recents.length > 0) {
+      html += `<div class="loc-section">Recent</div>`
+      html += recents.slice(0, 3).map(r => _locItemHTML(r, true)).join('')
+    }
+    const recentCodes = new Set(recents.map(r => r.code))
+    const all = POPULAR_DESTINATIONS.filter(p => !recentCodes.has(p.code))
+    html += `<div class="loc-section">All Destinations</div>`
+    html += all.map(p => _locItemHTML(p)).join('')
+  } else {
+    const matches = POPULAR_DESTINATIONS.filter(p =>
+      p.code.startsWith(query) ||
+      p.city.toUpperCase().startsWith(query) ||
+      p.city.toUpperCase().includes(query)
+    ).slice(0, 5)
+    if (!matches.length) { dropdownEl.classList.add('hidden'); return }
+    html = matches.map(p => _locItemHTML(p)).join('')
+  }
+
+  dropdownEl.innerHTML = html
+  dropdownEl.classList.remove('hidden')
+
+  dropdownEl.querySelectorAll('.loc-item').forEach(item => {
+    item.addEventListener('mousedown', (e) => {
+      e.preventDefault()
+      const dest = POPULAR_DESTINATIONS.find(p => p.code === item.dataset.code)
+      if (dest) { inputEl.value = dest.code; _saveRecent(dest) }
+      dropdownEl.classList.add('hidden')
+      if (nextInputEl) nextInputEl.focus()
+    })
+  })
+}
+
+function initLocationAutocomplete() {
+  const originEl = $('origin')
+  const destEl = $('destination')
+  const originDrop = $('origin-dropdown')
+  const destDrop = $('destination-dropdown')
+
+  const pairs = [[originEl, originDrop, destEl], [destEl, destDrop, null]]
+  pairs.forEach(([input, dropdown, next]) => {
+    input.addEventListener('focus', () => _renderDropdown(input, dropdown, next))
+    input.addEventListener('input', () => _renderDropdown(input, dropdown, next))
+    input.addEventListener('blur', () => setTimeout(() => dropdown.classList.add('hidden'), 150))
+    input.addEventListener('keydown', (e) => { if (e.key === 'Escape') dropdown.classList.add('hidden') })
+  })
+}
+
 // ── DOM helpers ────────────────────────────────────────────────────────────
 const $ = (id) => document.getElementById(id)
 const show = (el) => el && el.classList.remove('hidden')
@@ -213,6 +314,12 @@ async function handleSearch() {
   readParams()
   $('search-error').textContent = ''
   try { validateParams() } catch (e) { $('search-error').textContent = e.message; return }
+
+  // Save origin + destination to recents
+  const originMatch = POPULAR_DESTINATIONS.find(p => p.code === state.params.origin.toUpperCase())
+  const destMatch = POPULAR_DESTINATIONS.find(p => p.code === state.params.destination.toUpperCase())
+  if (originMatch) _saveRecent(originMatch)
+  if (destMatch) _saveRecent(destMatch)
 
   state.results = { flights: [], returnFlights: [], hotels: [], activities: [] }
   state.sel = { flight: null, returnFlight: null, hotel: null }
@@ -733,6 +840,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   updateAuthUI()
+  initLocationAutocomplete()
 
   // Header events
   $('tenant-badge').addEventListener('click', initTenantPicker)
