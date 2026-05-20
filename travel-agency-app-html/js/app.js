@@ -139,6 +139,7 @@ async function handleSignIn(e) {
   if (authMode === 'register') {
     const firstName = $('auth-first-name').value.trim()
     const lastName = $('auth-last-name').value.trim()
+    const phone = $('auth-phone').value.trim()
     if (!firstName) { _showAuthError('Please enter your first name.'); return }
     if (!lastName) { _showAuthError('Please enter your last name.'); return }
     if (!email) { _showAuthError('Please enter your email address.'); return }
@@ -146,7 +147,7 @@ async function handleSignIn(e) {
     if (password.length < 6) { _showAuthError('Password must be at least 6 characters.'); return }
     $('btn-auth-submit').disabled = true
     $('btn-auth-submit').textContent = 'Creating account…'
-    const result = await auth.register({ firstName, lastName, email, phone: '', password })
+    const result = await auth.register({ firstName, lastName, email, phone, password })
     $('btn-auth-submit').disabled = false
     $('btn-auth-submit').textContent = 'Create Account'
     if (result.success) { closeAuthModal(); updateAuthUI() }
