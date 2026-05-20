@@ -44,14 +44,26 @@ function setTenant(tenant) {
   $('brand-name').textContent = tenant.brandName
   $('tenant-badge').textContent = `Agent ${tenant.agentId}`
   hide($('tenant-overlay'))
+
+  const heroTitle = $('hero-title')
+  const heroSub = $('hero-sub')
+  const heroFeatures = $('hero-features')
+  if (heroTitle && tenant.heroTitle) heroTitle.textContent = tenant.heroTitle
+  if (heroSub && tenant.heroSub) heroSub.textContent = tenant.heroSub
+  if (heroFeatures && tenant.heroFeatures) {
+    heroFeatures.innerHTML = tenant.heroFeatures
+      .map(f => `<div class="hero__feature"><span class="hero__feature-icon">${f.icon}</span>${f.label}</div>`)
+      .join('')
+  }
 }
 
 function initTenantPicker() {
   const grid = $('tenant-grid')
+  grid.innerHTML = ''
   ALL_TENANTS.forEach((t) => {
     const btn = document.createElement('button')
     btn.className = 'tenant-btn'
-    btn.innerHTML = `<span class="logo">${t.brandLogo}</span><div class="t-name">${t.brandName}</div><div class="t-id">Agent ${t.agentId}</div>`
+    btn.innerHTML = `<span class="logo">${t.brandLogo}</span><div class="t-name">${t.brandName}</div><div class="t-tagline">${t.tagline || ''}</div><div class="t-id">Agent ${t.agentId}</div>`
     btn.addEventListener('click', () => setTenant(t))
     grid.appendChild(btn)
   })
@@ -722,6 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateAuthUI()
 
   // Header events
+  $('tenant-badge').addEventListener('click', initTenantPicker)
   $('btn-signin').addEventListener('click', () => {
     if (auth.isAuthenticated()) { auth.signOut(); updateAuthUI(); renderSummary() }
     else openAuthModal()

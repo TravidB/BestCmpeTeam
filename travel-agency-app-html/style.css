@@ -9,6 +9,13 @@
   font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
   font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;
 }
+[data-theme=agenta]{
+  --color-primary:#1a3270;--color-primary-dark:#0f1f4d;--color-primary-light:#2b4fc4;
+  --color-primary-bg:#eef2ff;--color-accent:#b7791f;--color-accent-dark:#92600f;
+  --color-bg:#f8f9fc;--color-bg-subtle:#f0f2f9;--color-text:#0f172a;
+  --color-text-muted:#536080;--color-border:#e0e5f0;--color-border-dark:#9aabcc;
+  --hero-gradient:linear-gradient(160deg,#eef2ff 0%,#e8f0ff 55%,#f5f0ff 100%);
+}
 [data-theme=agentb]{
   --color-primary:#0f766e;--color-primary-dark:#115e59;--color-primary-light:#0f9a91;
   --color-primary-bg:#e6fffa;--color-accent:#b45309;--color-accent-dark:#92400e;
@@ -39,6 +46,8 @@ button,input,select{font-family:inherit;font-size:inherit}
 .nav-link:disabled{opacity:.45;cursor:not-allowed}
 .header-actions{display:flex;align-items:center;gap:.5rem;flex-shrink:0;margin-left:auto}
 .tenant-badge,.user-badge{padding:.25rem .6rem;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);font-size:.75rem;font-weight:700}
+.tenant-badge{cursor:pointer;transition:background .15s,border-color .15s}
+.tenant-badge:hover{background:rgba(255,255,255,.28);border-color:rgba(255,255,255,.6)}
 .user-badge{background:rgba(255,255,255,.2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .btn-signin{padding:.35rem 1rem;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:.85rem;font-weight:600;cursor:pointer;transition:background .15s}
 .btn-signin:hover{background:rgba(255,255,255,.25)}
@@ -54,6 +63,7 @@ button,input,select{font-family:inherit;font-size:inherit}
 .tenant-btn .logo{font-size:2rem;display:block;margin-bottom:.5rem}
 .tenant-btn .t-name{font-weight:700;font-size:.95rem;color:var(--color-text)}
 .tenant-btn .t-id{font-size:.75rem;color:var(--color-text-muted);margin-top:.2rem}
+.tenant-btn .t-tagline{font-size:.75rem;color:var(--color-primary);font-weight:600;margin-top:.3rem;font-style:italic}
 
 /* ── Auth modal ── */
 .auth-field{display:flex;flex-direction:column;gap:.35rem;margin-bottom:.75rem}
