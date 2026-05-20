@@ -25,13 +25,13 @@ The system demonstrates frontend/backend integration, CRUD operations, authentic
 - Login system
 - SQLite user database integration
 
-<img src="screenshots/create_account.png" width="700">
+<img src="screenshots/create_account.png" width="500">
 (user successfully created)
 
-<img src="screenshots/account_already.png" width="700">
+<img src="screenshots/account_already.png" width="500">
 (account already exist)
 
-![Login Page](screenshots/log_success.png)
+<img src="screenshots/log_success.png" width="500">
 (successfully logged in - viewing dashboard)
 
 ## Flight Booking
@@ -42,8 +42,8 @@ The system demonstrates frontend/backend integration, CRUD operations, authentic
 - Sold-out flight handling
 - Booking creation
 
-![Login Page](screenshots/book_flight.png)
-![Login Page](screenshots/book_success.png)
+<img src="screenshots/book_flight.png" width="500">
+<img src="screenshots/book_success.png" width="500">
 
 ## Hotel Booking
 - Search hotels by:
@@ -53,22 +53,23 @@ The system demonstrates frontend/backend integration, CRUD operations, authentic
 - Pet-friendly accommodation services
 - Dynamic hotel filtering
 
-![Login Page](screenshots/book_hotel.png)
-![Login Page](screenshots/book_hotel2.png)
-![Login Page](screenshots/hotel_success.png)
+<img src="screenshots/book_hotel.png" width="500">
+<img src="screenshots/book_hotel2.png" width="500">
+<img src="screenshots/hotel_success.png" width="500">
+
 
 ## Booking Management
 - View bookings
 - Edit bookings
 - Cancel bookings
 
-![Login Page](screenshots/view_booking.png)
+<img src="screenshots/view_booking.png" width="500">
 
 ## User Isolation
 - Users are having individual platforms
 - Security is granted, no data crossovers
 
-![Login Page](screenshots/diff_user.png)
+<img src="screenshots/diff_user.png" width="500">
 
 ---
 
