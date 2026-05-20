@@ -25,10 +25,10 @@ The system demonstrates frontend/backend integration, CRUD operations, authentic
 - Login system
 - SQLite user database integration
 
-![Login Page](screenshots/create_account.png)
+<img src="screenshots/create_account.png" width="700">
 (user successfully created)
 
-![Login Page](screenshots/account_already.png)
+<img src="screenshots/account_already.png" width="700">
 (account already exist)
 
 ![Login Page](screenshots/log_success.png)
@@ -172,11 +172,11 @@ Potential future improvements include:
 
 ## Authors
 
-Yve Do
-Travis Bui
-Yoomi Kim
-Vincent Nguyen 
-Lucia Lu
+- Yve Do
+- Travis Bui
+- Yoomi Kim
+- Vincent Nguyen 
+- Lucia Lu
 
 ## Data 
 
