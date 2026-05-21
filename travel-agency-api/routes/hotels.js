@@ -14,8 +14,8 @@ const HOTELS = [
     description: "A cozy pet-friendly hotel that welcomes large dogs with open paws.",
     roomTypes: ["Standard Suite", "Pet Family Suite"],
     nearbyPark: "Willow Glen Park",
-    Price: 150,
-    Rate: 4.5,
+    price: 150,
+    rate: 4.5,
   },
   {
     id: 2,
@@ -29,8 +29,8 @@ const HOTELS = [
     description: "Located near the park, this hotel makes walking and dining with your dog easy.",
     roomTypes: ["City View Room", "Pet Premium Room"],
     nearbyPark: "Golden Gate Park",
-    Price: 200,
-    Rate: 4.0, 
+    price: 200,
+    rate: 4.0, 
   },
   {
     id: 3,
@@ -44,8 +44,8 @@ const HOTELS = [
     description: "A calm urban hotel with dedicated pet care amenities and nearby walking paths.",
     roomTypes: ["Standard", "Deluxe Pet Suite"],
     nearbyPark: "Discovery Park",
-    Price: 120,
-    Rate: 3.8,
+    price: 120,
+    rate: 3.8,
   },
   {
     id: 4,
@@ -59,8 +59,8 @@ const HOTELS = [
     description: "A popular choice among active pet owners with access to nearby trails.",
     roomTypes: ["Trail View Room", "Pet Playroom Suite"],
     nearbyPark: "Zilker Park",
-    Price: 180,
-    Rate: 4.2,
+    price: 180,
+    rate: 4.2,
   },
   {
     id: 5,
@@ -74,8 +74,8 @@ const HOTELS = [
     description: "Beachside hotel with pet-friendly food offerings and a walkable park nearby.",
     roomTypes: ["Ocean View", "Pet Luxury Suite"],
     nearbyPark: "Bayside Park",
-    Price: 250,
-    Rate: 4.7,
+    price: 250,
+    rate: 4.7,
   },
 ];
 
