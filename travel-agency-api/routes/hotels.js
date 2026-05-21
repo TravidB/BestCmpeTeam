@@ -107,6 +107,8 @@ router.get("/", (req, res) => {
   const maxPrice = req.query.maxPrice ? Number(req.query.maxPrice) : null;
   const minRating = req.query.minRating ? Number(req.query.minRating) : null;
 
+  const sortBy = (req.query.sortBy || "").toLowerCase();
+
   const filtered = HOTELS.filter((hotel) => {
     const matchesDate = !date || hotel.date.toLowerCase() === date;
 
@@ -118,8 +120,16 @@ router.get("/", (req, res) => {
       (!minPrice || hotel.price >= minPrice) &&
       (!maxPrice || hotel.price <= maxPrice) &&
       (!minRating || hotel.rating >= minRating)
+
     );
   });
+  if (sortBy === "price_asc") {
+    filtered.sort((a, b) => a.price - b.price);
+}   else if (sortBy === "price_desc") {
+    filtered.sort((a, b) => b.price - a.price);
+}.  else if (sortBy === "rating_desc") {
+    filtered.sort((a, b) => b.rating - a.rating);
+}
 
   res.json(filtered);
 });
