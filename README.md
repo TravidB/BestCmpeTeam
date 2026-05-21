@@ -47,6 +47,7 @@ The system demonstrates frontend/backend integration, CRUD operations, authentic
 - Full flight list can be viewed on the webpage. Only partial section is shown for space consideration.
 
 <img src="screenshots/book_success.png" width="500">
+(Booking success, then listed in 'My Bookings')
 
 ## Hotel Booking
 - Search hotels by:
@@ -56,13 +57,12 @@ The system demonstrates frontend/backend integration, CRUD operations, authentic
 - Pet-friendly accommodation services
 - Dynamic hotel filtering
 
+<img src="screenshots/Screenshot%202026-05-20%20at%2012.24.11%20AM.png" width="500">
 <img src="screenshots/book_hotel.png" width="500">
 
-- Full flight list can be viewed on the webpage. Only partial section is shown for space consideration.
+- Full hotel list can be viewed on the webpage. Only partial section is shown for space consideration.
 
 <img src="screenshots/book_hotel2.png" width="500">
-<img src="screenshots/hotel_success.png" width="500">
-
 
 ## Booking Management
 - View bookings
