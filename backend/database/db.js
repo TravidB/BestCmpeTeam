@@ -52,9 +52,13 @@ db.serialize(() => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       userId INTEGER,
       type TEXT,
-      itemId INTEGER
+      itemId INTEGER,
+      num_tickets INTEGER DEFAULT 1,
+      num_pets INTEGER DEFAULT 0
     )
   `);
+  db.run(`ALTER TABLE bookings ADD COLUMN num_tickets INTEGER DEFAULT 1`, () => {});
+  db.run(`ALTER TABLE bookings ADD COLUMN num_pets INTEGER DEFAULT 0`, () => {});
 });
 
 module.exports = db;

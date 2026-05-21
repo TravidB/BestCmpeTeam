@@ -24,12 +24,12 @@ router.get("/:userId", (req, res) => {
 
 // CREATE BOOKING
 router.post("/", (req, res) => {
-  const { userId, type, itemName } = req.body;
+  const { userId, type, itemName, num_tickets, num_pets } = req.body;
 
   db.run(
-    `INSERT INTO bookings (userId, type, itemId)
-     VALUES (?, ?, ?)`,
-    [userId, type, itemName],
+    `INSERT INTO bookings (userId, type, itemId, num_tickets, num_pets)
+     VALUES (?, ?, ?, ?, ?)`,
+    [userId, type, itemName, num_tickets || 1, num_pets || 0],
     function (err) {
       if (err) {
         return res.status(500).json({

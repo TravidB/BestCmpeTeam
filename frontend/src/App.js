@@ -53,6 +53,8 @@ function App() {
   const [userId, setUserId] = useState(null);
 
   const [bookings, setBookings] = useState([]);
+  const [numTickets, setNumTickets] = useState(1);
+  const [numPets, setNumPets] = useState(0);
   const [flightSearch, setFlightSearch] = useState({
     departure: "",
     destination: "",
@@ -466,7 +468,7 @@ function App() {
   }
 
   // CREATE BOOKING
-  async function createBooking(type, itemName) {
+  async function createBooking(type, itemName, tickets, pets) {
     const response = await fetch(
       "http://localhost:5001/bookings",
       {
@@ -478,6 +480,8 @@ function App() {
           userId,
           type,
           itemName,
+          num_tickets: tickets ?? 1,
+          num_pets: pets ?? 0,
         }),
       }
     );
@@ -700,13 +704,42 @@ function App() {
         <Header />
         <div style={{ padding: "40px" }}>
           <h1>Available Flights</h1>
+
+          <div style={{ display: "flex", gap: "24px", marginBottom: "20px", alignItems: "center", flexWrap: "wrap" }}>
+            <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontWeight: 600, fontSize: "0.9rem" }}>
+              Tickets
+              <input
+                type="number"
+                min="1"
+                max="10"
+                value={numTickets}
+                onChange={(e) => setNumTickets(Math.max(1, parseInt(e.target.value) || 1))}
+                style={{ width: "70px", padding: "6px 8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "1rem" }}
+              />
+            </label>
+            <label style={{ display: "flex", flexDirection: "column", gap: "4px", fontWeight: 600, fontSize: "0.9rem" }}>
+              Pets 🐾
+              <input
+                type="number"
+                min="0"
+                max="5"
+                value={numPets}
+                onChange={(e) => setNumPets(Math.max(0, parseInt(e.target.value) || 0))}
+                style={{ width: "70px", padding: "6px 8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "1rem" }}
+              />
+            </label>
+            <span style={{ fontSize: "0.82rem", color: "#666", alignSelf: "flex-end", paddingBottom: "8px" }}>
+              These apply to whichever flight you book
+            </span>
+          </div>
+
           {flights.map((flight) => (
             <div key={flight.id}>
               <p>{flight.departure} → {flight.destination}</p>
               <p>{flight.date}</p>
               <button
                 disabled={!flight.available}
-                onClick={() => createBooking("Flight", `${flight.departure} to ${flight.destination}`)}
+                onClick={() => createBooking("Flight", `${flight.departure} to ${flight.destination}`, numTickets, numPets)}
               >
                 {flight.available ? "Book" : "Sold Out"}
               </button>
@@ -752,11 +785,19 @@ function App() {
         <Header />
         <div style={{ padding: "40px" }}>
           <h1>My Bookings</h1>
+          {bookings.length === 0 && <p style={{ color: "#888" }}>No bookings yet.</p>}
           {bookings.map((booking) => (
-            <div key={booking.id}>
-              <p>{booking.type}: {booking.itemId}</p>
-              <button onClick={() => editBooking(booking.id)}>Edit Booking</button>
-              <button onClick={() => deleteBooking(booking.id)}>Cancel Booking</button>
+            <div key={booking.id} style={{ marginBottom: "12px" }}>
+              <p style={{ margin: "4px 0", fontWeight: 600 }}>
+                {booking.type}: {booking.itemId}
+              </p>
+              <p style={{ margin: "4px 0", fontSize: "0.88rem", color: "#444" }}>
+                🎟 {booking.num_tickets ?? 1} ticket{(booking.num_tickets ?? 1) !== 1 ? "s" : ""}
+                {(booking.num_pets ?? 0) > 0 && ` · 🐾 ${booking.num_pets} pet${booking.num_pets !== 1 ? "s" : ""}`}
+              </p>
+              <button onClick={() => editBooking(booking.id)}>Edit</button>
+              {" "}
+              <button onClick={() => deleteBooking(booking.id)}>Cancel</button>
               <hr />
             </div>
           ))}
