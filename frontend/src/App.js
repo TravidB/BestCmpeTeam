@@ -1,6 +1,42 @@
 import { useState } from "react";
 
+const AGENCIES = {
+  A: { name: "SkyLux Travel",       logo: "🛫", primary: "#1a3270", tagline: "Travel in Style" },
+  B: { name: "Horizon Adventures",  logo: "🌍", primary: "#0f766e", tagline: "Go Further, Explore More" },
+};
+
 function App() {
+  const [agency, setAgency] = useState("A");
+  const ag = AGENCIES[agency];
+
+  const Header = () => (
+    <div style={{
+      background: ag.primary, color: "#fff",
+      padding: "0 24px", height: "52px",
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      position: "sticky", top: 0, zIndex: 100,
+      boxShadow: "0 2px 8px rgba(0,0,0,.2)",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <span style={{ fontSize: "1.4rem" }}>{ag.logo}</span>
+        <span style={{ fontWeight: 800, fontSize: "1.05rem" }}>{ag.name}</span>
+        <div style={{ display: "flex", gap: "5px", marginLeft: "14px" }}>
+          {["A","B"].map(k => (
+            <button key={k} onClick={() => setAgency(k)} style={{
+              padding: "2px 11px", borderRadius: "999px",
+              border: "1.5px solid rgba(255,255,255,.5)",
+              background: agency === k ? "rgba(255,255,255,.25)" : "transparent",
+              color: "#fff", fontWeight: 700, fontSize: "0.73rem", cursor: "pointer",
+            }}>Agency {k}</button>
+          ))}
+        </div>
+      </div>
+      <span style={{ fontSize: "0.75rem", opacity: 0.65, fontStyle: "italic" }}>
+        {ag.tagline}
+      </span>
+    </div>
+  );
+
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
 
@@ -558,7 +594,9 @@ function App() {
   // LOGIN PAGE
   if (!loggedIn) {
     return (
-      <div style={{ padding: "40px", fontFamily: "Arial" }}>
+      <div style={{ fontFamily: "Arial" }}>
+        <Header />
+        <div style={{ padding: "40px" }}>
         <h1>Pet-Friendly Travel Booking</h1>
 
         <p>{message}</p>
@@ -614,6 +652,7 @@ function App() {
         <br /><br />
 
         <button onClick={handleRegister}>Register</button>
+        </div>
       </div>
     );
   }
@@ -621,7 +660,9 @@ function App() {
   // DASHBOARD
   if (currentPage === "dashboard") {
     return (
-      <div style={{ padding: "40px", fontFamily: "Arial" }}>
+      <div style={{ fontFamily: "Arial" }}>
+        <Header />
+        <div style={{ padding: "40px" }}>
         <h1>Pet-Friendly Travel Dashboard</h1>
 
         <p>{message}</p>
@@ -647,6 +688,7 @@ function App() {
         <button onClick={handleLogout}>
           Logout
         </button>
+        </div>
       </div>
     );
   }
@@ -654,36 +696,25 @@ function App() {
   // FLIGHTS PAGE
   if (currentPage === "flights") {
     return (
-      <div style={{ padding: "40px", fontFamily: "Arial" }}>
-        <h1>Available Flights</h1>
-
-        {flights.map((flight) => (
-          <div key={flight.id}>
-            <p>
-              {flight.departure} → {flight.destination}
-            </p>
-
-            <p>{flight.date}</p>
-
-            <button
-              disabled={!flight.available}
-              onClick={() =>
-                createBooking(
-                  "Flight",
-                  `${flight.departure} to ${flight.destination}`
-                )
-              }
-            >
-              {flight.available ? "Book" : "Sold Out"}
-            </button>
-
-            <hr />
-          </div>
-        ))}
-
-        <button onClick={() => setCurrentPage("dashboard")}>
-          Back
-        </button>
+      <div style={{ fontFamily: "Arial" }}>
+        <Header />
+        <div style={{ padding: "40px" }}>
+          <h1>Available Flights</h1>
+          {flights.map((flight) => (
+            <div key={flight.id}>
+              <p>{flight.departure} → {flight.destination}</p>
+              <p>{flight.date}</p>
+              <button
+                disabled={!flight.available}
+                onClick={() => createBooking("Flight", `${flight.departure} to ${flight.destination}`)}
+              >
+                {flight.available ? "Book" : "Sold Out"}
+              </button>
+              <hr />
+            </div>
+          ))}
+          <button onClick={() => setCurrentPage("dashboard")}>Back</button>
+        </div>
       </div>
     );
   }
@@ -691,36 +722,25 @@ function App() {
   // HOTELS PAGE
   if (currentPage === "hotels") {
     return (
-      <div style={{ padding: "40px", fontFamily: "Arial" }}>
-        <h1>Pet-Friendly Hotels</h1>
-
-        {hotels.map((hotel) => (
-          <div key={hotel.id}>
-            <p>{hotel.hotelName}</p>
-
-            <p>
-              Near: {hotel.attraction}
-            </p>
-
-            <button
-              disabled={!hotel.available}
-              onClick={() =>
-                createBooking(
-                  "Hotel",
-                  hotel.hotelName
-                )
-              }
-            >
-              {hotel.available ? "Book" : "Sold Out"}
-            </button>
-
-            <hr />
-          </div>
-        ))}
-
-        <button onClick={() => setCurrentPage("dashboard")}>
-          Back
-        </button>
+      <div style={{ fontFamily: "Arial" }}>
+        <Header />
+        <div style={{ padding: "40px" }}>
+          <h1>Pet-Friendly Hotels</h1>
+          {hotels.map((hotel) => (
+            <div key={hotel.id}>
+              <p>{hotel.hotelName}</p>
+              <p>Near: {hotel.attraction}</p>
+              <button
+                disabled={!hotel.available}
+                onClick={() => createBooking("Hotel", hotel.hotelName)}
+              >
+                {hotel.available ? "Book" : "Sold Out"}
+              </button>
+              <hr />
+            </div>
+          ))}
+          <button onClick={() => setCurrentPage("dashboard")}>Back</button>
+        </div>
       </div>
     );
   }
@@ -728,32 +748,20 @@ function App() {
   // MY BOOKINGS PAGE
   if (currentPage === "myBookings") {
     return (
-      <div style={{ padding: "40px", fontFamily: "Arial" }}>
-        <h1>My Bookings</h1>
-
-        {bookings.map((booking) => (
-          <div key={booking.id}>
-            <p>
-              {booking.type}: {booking.itemId}
-            </p>
-            <button
-              onClick={() => editBooking(booking.id)}
-            >
-              Edit Booking
-            </button>
-            <button
-              onClick={() => deleteBooking(booking.id)}
-            >
-              Cancel Booking
-            </button>
-
-            <hr />
-          </div>
-        ))}
-
-        <button onClick={() => setCurrentPage("dashboard")}>
-          Back
-        </button>
+      <div style={{ fontFamily: "Arial" }}>
+        <Header />
+        <div style={{ padding: "40px" }}>
+          <h1>My Bookings</h1>
+          {bookings.map((booking) => (
+            <div key={booking.id}>
+              <p>{booking.type}: {booking.itemId}</p>
+              <button onClick={() => editBooking(booking.id)}>Edit Booking</button>
+              <button onClick={() => deleteBooking(booking.id)}>Cancel Booking</button>
+              <hr />
+            </div>
+          ))}
+          <button onClick={() => setCurrentPage("dashboard")}>Back</button>
+        </div>
       </div>
     );
   }
