@@ -105,6 +105,12 @@ cd travel-agency-node-api
 npm install
 npm run dev
 ```
+or
+```bash
+cd travel-agency-platform/travel-agency-api
+npm install
+node server.js
+```
 
 Backend runs on:
 ```bash
@@ -125,6 +131,19 @@ Frontend runs on:
 ```bash
 http://localhost:3000
 ```
+
+Seed Test
+```bash
+cd travel-agency-platform\travel-agency-api
+node database/seed.js
+```
+
+Sqlite3 reload
+```bash
+npm uninstall sqlite3
+npm install sqlite3
+```
+
 
 ---
 
