@@ -31,7 +31,6 @@ const FLIGHTS = [
   { id: 20, departure: "Boston", destination: "Miami", date: "2026-06-25", available: true },
 ];
 
-
 function App() {
   const [agency] = useState("A");
   const [page, setPage] = useState("login");
@@ -87,7 +86,6 @@ function App() {
     }),
     [flightSearch]
   );
-
 
   const setAlert = (text) => {
     setMessage(text);

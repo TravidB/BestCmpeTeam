@@ -14,7 +14,11 @@
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "express": "^5.2.1",
+<<<<<<< HEAD
     "sqlite3": "^6.0.1",
+=======
+    "sqlite3": "^5.1.6",
+>>>>>>> e87518c9f638d3d5f80f17a8746cfdae8743b948
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^4.6.3"
   },
