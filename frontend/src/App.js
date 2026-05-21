@@ -55,6 +55,9 @@ function App() {
   const [bookings, setBookings] = useState([]);
   const [numTickets, setNumTickets] = useState(1);
   const [numPets, setNumPets] = useState(0);
+  const [editingId, setEditingId] = useState(null);
+  const [editTickets, setEditTickets] = useState(1);
+  const [editPets, setEditPets] = useState(0);
   const [flightSearch, setFlightSearch] = useState({
     departure: "",
     destination: "",
@@ -565,22 +568,30 @@ function App() {
     setCurrentPage("myBookings");
   };
 
-  //EDIT BOOKING
-  const editBooking = (id) => {
-    const updatedBookings = bookings.map((booking) => {
-      if (booking.id === id) {
-        return {
-          ...booking,
-          itemId: booking.itemId + " (Updated)"
-        };
-      }
+  //EDIT BOOKING — open inline editor
+  const editBooking = (booking) => {
+    setEditingId(booking.id);
+    setEditTickets(booking.num_tickets ?? 1);
+    setEditPets(booking.num_pets ?? 0);
+  };
 
-      return booking;
-    });
+  // SAVE BOOKING EDIT
+  const saveBookingEdit = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:5001/bookings/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ num_tickets: editTickets, num_pets: editPets }),
+      });
 
-    setBookings(updatedBookings);
-
-    setMessage("Booking updated successfully");
+      const data = await response.json();
+      setMessage(data.message || data.error || "");
+    } catch (err) {
+      setMessage("Failed to save — check that the backend server is running.");
+    } finally {
+      setEditingId(null);
+      await loadBookings();
+    }
   };
 
   // DELETE BOOKING
@@ -791,13 +802,50 @@ function App() {
               <p style={{ margin: "4px 0", fontWeight: 600 }}>
                 {booking.type}: {booking.itemId}
               </p>
-              <p style={{ margin: "4px 0", fontSize: "0.88rem", color: "#444" }}>
-                🎟 {booking.num_tickets ?? 1} ticket{(booking.num_tickets ?? 1) !== 1 ? "s" : ""}
-                {(booking.num_pets ?? 0) > 0 && ` · 🐾 ${booking.num_pets} pet${booking.num_pets !== 1 ? "s" : ""}`}
-              </p>
-              <button onClick={() => editBooking(booking.id)}>Edit</button>
-              {" "}
-              <button onClick={() => deleteBooking(booking.id)}>Cancel</button>
+
+              {editingId === booking.id ? (
+                <div style={{ display: "flex", gap: "16px", alignItems: "center", margin: "8px 0", flexWrap: "wrap" }}>
+                  <label style={{ display: "flex", flexDirection: "column", gap: "3px", fontSize: "0.85rem", fontWeight: 600 }}>
+                    Tickets
+                    <input
+                      type="number"
+                      min="1"
+                      max="10"
+                      value={editTickets}
+                      onChange={(e) => setEditTickets(Math.max(1, parseInt(e.target.value) || 1))}
+                      style={{ width: "65px", padding: "5px 7px", borderRadius: "6px", border: "1px solid #aaa", fontSize: "0.95rem" }}
+                    />
+                  </label>
+                  <label style={{ display: "flex", flexDirection: "column", gap: "3px", fontSize: "0.85rem", fontWeight: 600 }}>
+                    Pets 🐾
+                    <input
+                      type="number"
+                      min="0"
+                      max="5"
+                      value={editPets}
+                      onChange={(e) => setEditPets(Math.max(0, parseInt(e.target.value) || 0))}
+                      style={{ width: "65px", padding: "5px 7px", borderRadius: "6px", border: "1px solid #aaa", fontSize: "0.95rem" }}
+                    />
+                  </label>
+                  <div style={{ display: "flex", gap: "8px", alignSelf: "flex-end", paddingBottom: "2px" }}>
+                    <button onClick={() => saveBookingEdit(booking.id)}>Save</button>
+                    <button onClick={() => setEditingId(null)}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <p style={{ margin: "4px 0", fontSize: "0.88rem", color: "#444" }}>
+                  🎟 {booking.num_tickets ?? 1} ticket{(booking.num_tickets ?? 1) !== 1 ? "s" : ""}
+                  {(booking.num_pets ?? 0) > 0 && ` · 🐾 ${booking.num_pets} pet${booking.num_pets !== 1 ? "s" : ""}`}
+                </p>
+              )}
+
+              {editingId !== booking.id && (
+                <>
+                  <button onClick={() => editBooking(booking)}>Edit</button>
+                  {" "}
+                  <button onClick={() => deleteBooking(booking.id)}>Cancel Booking</button>
+                </>
+              )}
               <hr />
             </div>
           ))}

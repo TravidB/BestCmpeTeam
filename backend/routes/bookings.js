@@ -44,6 +44,28 @@ router.post("/", (req, res) => {
   );
 });
 
+// UPDATE BOOKING
+router.put("/:id", (req, res) => {
+  const bookingId = req.params.id;
+  const { num_tickets, num_pets } = req.body;
+
+  db.run(
+    `UPDATE bookings SET num_tickets = ?, num_pets = ? WHERE id = ?`,
+    [num_tickets, num_pets, bookingId],
+    function (err) {
+      if (err) {
+        return res.status(500).json({
+          error: "Database error"
+        });
+      }
+
+      res.json({
+        message: "Booking updated successfully"
+      });
+    }
+  );
+});
+
 // DELETE BOOKING
 router.delete("/:id", (req, res) => {
   const bookingId = req.params.id;
