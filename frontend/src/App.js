@@ -1,58 +1,50 @@
-import { useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import "./App.css";
+
+const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5001/api";
 
 const AGENCIES = {
-  A: { name: "SkyLux Travel",       logo: "🛫", primary: "#1a3270", tagline: "Travel in Style" },
-  B: { name: "Horizon Adventures",  logo: "🌍", primary: "#0f766e", tagline: "Go Further, Explore More" },
+  A: { name: "SkyLux Travel", logo: "🛫", primary: "#0f766e", accent: "#1f2937", tagline: "Travel pet-friendly, everywhere." },
+  B: { name: "Horizon Adventures", logo: "🌍", primary: "#2563eb", accent: "#1f2937", tagline: "Discover journeys made for pets." },
 };
 
+const FLIGHTS = [
+  { id: 1, departure: "San Jose", destination: "New York", date: "2026-06-01", available: true },
+  { id: 2, departure: "San Francisco", destination: "Los Angeles", date: "2026-06-05", available: false },
+  { id: 3, departure: "Seattle", destination: "Chicago", date: "2026-06-08", available: true },
+  { id: 4, departure: "Austin", destination: "Miami", date: "2026-06-09", available: true },
+  { id: 5, departure: "Boston", destination: "Denver", date: "2026-06-10", available: true },
+  { id: 6, departure: "Las Vegas", destination: "San Diego", date: "2026-06-11", available: false },
+  { id: 7, departure: "Portland", destination: "Phoenix", date: "2026-06-12", available: true },
+  { id: 8, departure: "Dallas", destination: "Atlanta", date: "2026-06-13", available: true },
+  { id: 9, departure: "Houston", destination: "Orlando", date: "2026-06-14", available: true },
+  { id: 10, departure: "San Jose", destination: "Chicago", date: "2026-06-15", available: true },
+  { id: 11, departure: "San Francisco", destination: "Seattle", date: "2026-06-16", available: true },
+  { id: 12, departure: "New York", destination: "Boston", date: "2026-06-17", available: false },
+  { id: 13, departure: "Miami", destination: "Dallas", date: "2026-06-18", available: true },
+  { id: 14, departure: "Chicago", destination: "Austin", date: "2026-06-19", available: true },
+  { id: 15, departure: "Denver", destination: "San Jose", date: "2026-06-20", available: true },
+  { id: 16, departure: "Phoenix", destination: "Las Vegas", date: "2026-06-21", available: false },
+  { id: 17, departure: "Atlanta", destination: "Portland", date: "2026-06-22", available: true },
+  { id: 18, departure: "San Diego", destination: "Houston", date: "2026-06-23", available: true },
+  { id: 19, departure: "Orlando", destination: "Seattle", date: "2026-06-24", available: true },
+  { id: 20, departure: "Boston", destination: "Miami", date: "2026-06-25", available: true },
+];
+
+
 function App() {
-  const [agency, setAgency] = useState("A");
-  const ag = AGENCIES[agency];
-
-  const Header = () => (
-    <div style={{
-      background: ag.primary, color: "#fff",
-      padding: "0 24px", height: "52px",
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      position: "sticky", top: 0, zIndex: 100,
-      boxShadow: "0 2px 8px rgba(0,0,0,.2)",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <span style={{ fontSize: "1.4rem" }}>{ag.logo}</span>
-        <span style={{ fontWeight: 800, fontSize: "1.05rem" }}>{ag.name}</span>
-        <div style={{ display: "flex", gap: "5px", marginLeft: "14px" }}>
-          {["A","B"].map(k => (
-            <button key={k} onClick={() => setAgency(k)} style={{
-              padding: "2px 11px", borderRadius: "999px",
-              border: "1.5px solid rgba(255,255,255,.5)",
-              background: agency === k ? "rgba(255,255,255,.25)" : "transparent",
-              color: "#fff", fontWeight: 700, fontSize: "0.73rem", cursor: "pointer",
-            }}>Agency {k}</button>
-          ))}
-        </div>
-      </div>
-      <span style={{ fontSize: "0.75rem", opacity: 0.65, fontStyle: "italic" }}>
-        {ag.tagline}
-      </span>
-    </div>
-  );
-
+  const [agency] = useState("A");
+  const [page, setPage] = useState("login");
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
-
   const [registerUsername, setRegisterUsername] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [registerPhone, setRegisterPhone] = useState("");
-
   const [message, setMessage] = useState("");
-
   const [loggedIn, setLoggedIn] = useState(false);
-
-  const [currentPage, setCurrentPage] = useState("dashboard");
-
   const [userId, setUserId] = useState(null);
-
   const [bookings, setBookings] = useState([]);
+<<<<<<< HEAD
   const [numTickets, setNumTickets] = useState(1);
   const [numPets, setNumPets] = useState(0);
   const [editingId, setEditingId] = useState(null);
@@ -61,591 +53,406 @@ function App() {
   const [flightSearch, setFlightSearch] = useState({
     departure: "",
     destination: "",
-    date: "",
-  });
+    import { useMemo, useState, useEffect } from "react";
+    import "./App.css";
 
-  const [hotelSearch, setHotelSearch] = useState({
-    city: "",
-    attraction: "",
-    date: "",
-  });
+    const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:5001/api";
 
-  // MOCK FLIGHTS
-  const flights = [
-    {
-      id: 1,
-      departure: "San Jose",
-      destination: "New York",
-      date: "2026-06-01",
-      available: true,
-    },
-    {
-      id: 2,
-      departure: "San Francisco",
-      destination: "Los Angeles",
-      date: "2026-06-05",
-      available: false,
-    },
-    {
-      id: 3,
-      departure: "Seattle",
-      destination: "Chicago",
-      date: "2026-06-08",
-      available: true,
-    },
-    {
-      id: 4,
-      departure: "Austin",
-      destination: "Miami",
-      date: "2026-06-09",
-      available: true,
-    },
-    {
-      id: 5,
-      departure: "Boston",
-      destination: "Denver",
-      date: "2026-06-10",
-      available: true,
-    },
-    {
-      id: 6,
-      departure: "Las Vegas",
-      destination: "San Diego",
-      date: "2026-06-11",
-      available: false,
-    },
-    {
-      id: 7,
-      departure: "Portland",
-      destination: "Phoenix",
-      date: "2026-06-12",
-      available: true,
-    },
-    {
-      id: 8,
-      departure: "Dallas",
-      destination: "Atlanta",
-      date: "2026-06-13",
-      available: true,
-    },
-    {
-      id: 9,
-      departure: "Houston",
-      destination: "Orlando",
-      date: "2026-06-14",
-      available: true,
-    },
-    {
-      id: 10,
-      departure: "San Jose",
-      destination: "Chicago",
-      date: "2026-06-15",
-      available: true,
-    },
-    {
-      id: 11,
-      departure: "San Francisco",
-      destination: "Seattle",
-      date: "2026-06-16",
-      available: true,
-    },
-    {
-      id: 12,
-      departure: "New York",
-      destination: "Boston",
-      date: "2026-06-17",
-      available: false,
-    },
-    {
-      id: 13,
-      departure: "Miami",
-      destination: "Dallas",
-      date: "2026-06-18",
-      available: true,
-    },
-    {
-      id: 14,
-      departure: "Chicago",
-      destination: "Austin",
-      date: "2026-06-19",
-      available: true,
-    },
-    {
-      id: 15,
-      departure: "Denver",
-      destination: "San Jose",
-      date: "2026-06-20",
-      available: true,
-    },
-    {
-      id: 16,
-      departure: "Phoenix",
-      destination: "Las Vegas",
-      date: "2026-06-21",
-      available: false,
-    },
-    {
-      id: 17,
-      departure: "Atlanta",
-      destination: "Portland",
-      date: "2026-06-22",
-      available: true,
-    },
-    {
-      id: 18,
-      departure: "San Diego",
-      destination: "Houston",
-      date: "2026-06-23",
-      available: true,
-    },
-    {
-      id: 19,
-      departure: "Orlando",
-      destination: "Seattle",
-      date: "2026-06-24",
-      available: true,
-    },
-    {
-      id: 20,
-      departure: "Boston",
-      destination: "Miami",
-      date: "2026-06-25",
-      available: true,
-    },
-  ];
+    const AGENCIES = {
+      A: { name: "SkyLux Travel", logo: "🛫", primary: "#0f766e", accent: "#1f2937", tagline: "Travel pet-friendly, everywhere." },
+      B: { name: "Horizon Adventures", logo: "🌍", primary: "#2563eb", accent: "#1f2937", tagline: "Discover journeys made for pets." },
+    };
 
-  // MOCK HOTELS
-  const hotels = [
-    {
-      id: 1,
-      city: "New York",
-      attraction: "Central Park",
-      hotelName: "Pet Paradise Hotel",
-      petDetails: "Organic dog meals and pet spa",
-      available: true,
-    },
-    {
-      id: 2,
-      city: "Los Angeles",
-      attraction: "West Hollywood",
-      hotelName: "Happy Paws Resort",
-      petDetails: "Large dog friendly with pet walking service",
-      available: true,
-    },
-    {
-      id: 3,
-      city: "Seattle",
-      attraction: "Space Needle",
-      hotelName: "Cloud Nine Pets Hotel",
-      petDetails: "Nearby veterinary clinic included",
-      available: true,
-    },
-    {
-      id: 4,
-      city: "Chicago",
-      attraction: "Millennium Park",
-      hotelName: "Urban Tail Suites",
-      petDetails: "Indoor pet playground",
-      available: true,
-    },
-    {
-      id: 5,
-      city: "Miami",
-      attraction: "South Beach",
-      hotelName: "Ocean Paw Resort",
-      petDetails: "Pet beach access and grooming",
-      available: true,
-    },
-    {
-      id: 6,
-      city: "Boston",
-      attraction: "Fenway Park",
-      hotelName: "Green Bark Inn",
-      petDetails: "Pet daycare included",
-      available: false,
-    },
-    {
-      id: 7,
-      city: "Austin",
-      attraction: "Zilker Park",
-      hotelName: "Lone Star Pet Lodge",
-      petDetails: "Pet-friendly outdoor park access",
-      available: true,
-    },
-    {
-      id: 8,
-      city: "Denver",
-      attraction: "Red Rocks",
-      hotelName: "Mountain Paws Retreat",
-      petDetails: "Hiking trails for pets",
-      available: true,
-    },
-    {
-      id: 9,
-      city: "San Diego",
-      attraction: "Balboa Park",
-      hotelName: "Sunny Tail Hotel",
-      petDetails: "Pet swimming pool available",
-      available: true,
-    },
-    {
-      id: 10,
-      city: "Orlando",
-      attraction: "Disney Springs",
-      hotelName: "Magic Pet Resort",
-      petDetails: "Pet sitting service included",
-      available: true,
-    },
-    {
-      id: 11,
-      city: "Dallas",
-      attraction: "Klyde Warren Park",
-      hotelName: "Texas Wag Hotel",
-      petDetails: "Pet training classes",
-      available: true,
-    },
-    {
-      id: 12,
-      city: "Phoenix",
-      attraction: "Camelback Mountain",
-      hotelName: "Desert Paw Inn",
-      petDetails: "Cooling pet rooms",
-      available: true,
-    },
-    {
-      id: 13,
-      city: "Las Vegas",
-      attraction: "The Strip",
-      hotelName: "Lucky Paw Suites",
-      petDetails: "24-hour pet room service",
-      available: false,
-    },
-    {
-      id: 14,
-      city: "Syracuse",
-      attraction: "Forest Park",
-      hotelName: "Golden Pet Lodge",
-      petDetails: "Eco-friendly pet accommodations",
-      available: true,
-    },
-    {
-      id: 15,
-      city: "Atlanta",
-      attraction: "Piedmont Park",
-      hotelName: "Shaky Pet Hotel",
-      petDetails: "Dog walking and pet spa",
-      available: true,
-    },
-    {
-      id: 16,
-      city: "Houston",
-      attraction: "Discovery Green",
-      hotelName: "Yve's Bark Hotel",
-      petDetails: "Pet gourmet meals",
-      available: true,
-    },
-    {
-      id: 17,
-      city: "San Francisco",
-      attraction: "Golden Gate Park",
-      hotelName: "Vincent's Paw Palace",
-      petDetails: "Nearby pet-friendly cafes",
-      available: true,
-    },
-    {
-      id: 18,
-      city: "New York",
-      attraction: "Times Square",
-      hotelName: "Lucia's Pet Suites",
-      petDetails: "Luxury pet spa services",
-      available: true,
-    },
-    {
-      id: 19,
-      city: "Seattle",
-      attraction: "Seahawks Stadium",
-      hotelName: "Yk's Fantasyland",
-      petDetails: "Indoor pet recreation area",
-      available: true,
-    },
-    {
-      id: 20,
-      city: "Miami",
-      attraction: "Bayside Marketplace",
-      hotelName: "Bui's Resort",
-      petDetails: "Pet tropical menu available",
-      available: true,
-    },
-  ];
+    const FLIGHTS = [
+      { id: 1, departure: "San Jose", destination: "New York", date: "2026-06-01", available: true },
+      { id: 2, departure: "San Francisco", destination: "Los Angeles", date: "2026-06-05", available: false },
+      { id: 3, departure: "Seattle", destination: "Chicago", date: "2026-06-08", available: true },
+      { id: 4, departure: "Austin", destination: "Miami", date: "2026-06-09", available: true },
+      { id: 5, departure: "Boston", destination: "Denver", date: "2026-06-10", available: true },
+      { id: 6, departure: "Las Vegas", destination: "San Diego", date: "2026-06-11", available: false },
+      { id: 7, departure: "Portland", destination: "Phoenix", date: "2026-06-12", available: true },
+      { id: 8, departure: "Dallas", destination: "Atlanta", date: "2026-06-13", available: true },
+      { id: 9, departure: "Houston", destination: "Orlando", date: "2026-06-14", available: true },
+      { id: 10, departure: "San Jose", destination: "Chicago", date: "2026-06-15", available: true },
+      { id: 11, departure: "San Francisco", destination: "Seattle", date: "2026-06-16", available: true },
+      { id: 12, departure: "New York", destination: "Boston", date: "2026-06-17", available: false },
+      { id: 13, departure: "Miami", destination: "Dallas", date: "2026-06-18", available: true },
+      { id: 14, departure: "Chicago", destination: "Austin", date: "2026-06-19", available: true },
+      { id: 15, departure: "Denver", destination: "San Jose", date: "2026-06-20", available: true },
+      { id: 16, departure: "Phoenix", destination: "Las Vegas", date: "2026-06-21", available: false },
+      { id: 17, departure: "Atlanta", destination: "Portland", date: "2026-06-22", available: true },
+      { id: 18, departure: "San Diego", destination: "Houston", date: "2026-06-23", available: true },
+      { id: 19, departure: "Orlando", destination: "Seattle", date: "2026-06-24", available: true },
+      { id: 20, departure: "Boston", destination: "Miami", date: "2026-06-25", available: true },
+    ];
 
-  // MOCK HOTELS
-  if (currentPage === "hotels") {
 
-    const filteredHotels = hotels.filter((hotel) => {
-      return (
-        hotel.city
-          .toLowerCase()
-          .includes(hotelSearch.city.toLowerCase()) &&
+    function App() {
+      const [agency] = useState("A");
+      const [page, setPage] = useState("dashboard");
+      const [loginUsername, setLoginUsername] = useState("");
+      const [loginPassword, setLoginPassword] = useState("");
+      const [registerUsername, setRegisterUsername] = useState("");
+      const [registerPassword, setRegisterPassword] = useState("");
+      const [registerPhone, setRegisterPhone] = useState("");
+      const [message, setMessage] = useState("");
+      const [loggedIn, setLoggedIn] = useState(true);
+      const [userId, setUserId] = useState(null);
+      const [bookings, setBookings] = useState([]);
+      const [hotels, setHotels] = useState([]);
+      const [flightSearch, setFlightSearch] = useState({ departure: "", destination: "", date: "" });
+      const [hotelSearch, setHotelSearch] = useState({ city: "", attraction: "", date: "" });
 
-        hotel.attraction
-          .toLowerCase()
-          .includes(hotelSearch.attraction.toLowerCase())
+      const agencyData = AGENCIES[agency];
+
+      useEffect(() => {
+        if (page !== "hotels") return;
+
+        const controller = new AbortController();
+        const params = new URLSearchParams();
+
+        if (hotelSearch.city) params.append("city", hotelSearch.city);
+        if (hotelSearch.attraction) params.append("attraction", hotelSearch.attraction);
+        if (hotelSearch.date) params.append("date", hotelSearch.date);
+
+        fetch(`${API_BASE}/hotels?${params.toString()}`, { signal: controller.signal })
+          .then((res) => res.json())
+          .then((data) => {
+            setHotels(Array.isArray(data) ? data : []);
+          })
+          .catch(() => {
+            setHotels([]);
+          });
+
+        return () => controller.abort();
+      }, [hotelSearch, page]);
+
+      const filteredFlights = useMemo(
+        () => FLIGHTS.filter((flight) => {
+          return (
+            flight.departure.toLowerCase().includes(flightSearch.departure.toLowerCase()) &&
+            flight.destination.toLowerCase().includes(flightSearch.destination.toLowerCase()) &&
+            flight.date.includes(flightSearch.date)
+          );
+        }),
+        [flightSearch]
       );
-    });
 
-    return (
-      <div style={{ padding: "40px", fontFamily: "Arial" }}>
-        <h1>Pet-Friendly Hotel Search</h1>
+      const setAlert = (text) => {
+        setMessage(text);
+        window.setTimeout(() => setMessage(""), 5000);
+      };
 
-        <input
-          placeholder="City"
-          value={hotelSearch.city}
-          onChange={(e) =>
-            setHotelSearch({
-              ...hotelSearch,
-              city: e.target.value,
-            })
+      const handleRegister = async () => {
+        if (!registerUsername.trim() || !registerPassword.trim()) {
+          setAlert("Please provide a username and password.");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: registerUsername, password: registerPassword, phone_number: registerPhone || undefined }),
+          });
+
+          const data = await response.json();
+          if (!response.ok) {
+            setAlert(data.error || data.message || "Registration failed.");
+            return;
           }
-        />
 
-        <br /><br />
+          setAlert(data.message || "Registered successfully.");
+        } catch (error) {
+          setAlert("Unable to reach the backend. Please make sure the server is running.");
+        }
+      };
 
-        <input
-          placeholder="Nearby Attraction"
-          value={hotelSearch.attraction}
-          onChange={(e) =>
-            setHotelSearch({
-              ...hotelSearch,
-              attraction: e.target.value,
-            })
+      const handleLogin = async () => {
+        if (!loginUsername.trim() || !loginPassword.trim()) {
+          setAlert("Please enter both username and password.");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: loginUsername, password: loginPassword }),
+          });
+
+          const data = await response.json();
+          if (!response.ok) {
+            setAlert(data.error || data.message || "Login failed.");
+            return;
           }
-        />
 
-        <br /><br />
+          setLoggedIn(true);
+          setUserId(data.userId);
+          setPage("dashboard");
+          setMessage("Welcome back!");
+        } catch (error) {
+          setAlert("Unable to reach the backend. Please make sure the server is running.");
+        }
+      };
 
-        <input
-          placeholder="Travel Date"
-          value={hotelSearch.date}
-          onChange={(e) =>
-            setHotelSearch({
-              ...hotelSearch,
-              date: e.target.value,
-            })
+      const loadBookings = async () => {
+        if (!userId) {
+          setAlert("You must be logged in to see bookings.");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/bookings/${userId}`);
+          const data = await response.json();
+          if (!response.ok) {
+            setAlert(data.error || data.message || "Unable to load bookings.");
+            return;
           }
-        />
 
-        <hr />
+          setBookings(Array.isArray(data) ? data : []);
+          setPage("myBookings");
+        } catch (error) {
+          setAlert("Unable to reach the backend. Please make sure the server is running.");
+        }
+      };
 
-        {filteredHotels.map((hotel) => (
-          <div key={hotel.id}>
-            <p>{hotel.hotelName}</p>
+      const createBooking = async (type, itemName) => {
+        if (!userId) {
+          setAlert("Please login before booking.");
+          return;
+        }
 
-            <p>
-              Nearby Attraction: {hotel.attraction}
-            </p>
-            <p>
-              Pet Services: {hotel.petDetails}
-            </p>
+        try {
+          const response = await fetch(`${API_BASE}/bookings`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId, type, itemName }),
+          });
 
-            <button
-              disabled={!hotel.available}
-              onClick={() =>
-                createBooking(
-                  "Hotel",
-                  hotel.hotelName
-                )
-              }
-            >
-              {hotel.available ? "Book" : "Sold Out"}
-            </button>
+          const data = await response.json();
+          if (!response.ok) {
+            setAlert(data.error || data.message || "Booking request failed.");
+            return;
+          }
 
-            <hr />
+          setAlert(data.message || "Booking created successfully.");
+        } catch (error) {
+          setAlert("Unable to reach the backend. Please make sure the server is running.");
+        }
+      };
+
+      const deleteBooking = async (id) => {
+        try {
+          const response = await fetch(`${API_BASE}/bookings/${id}`, { method: "DELETE" });
+          if (!response.ok) {
+            const data = await response.json();
+            setAlert(data.error || data.message || "Unable to delete booking.");
+            return;
+          }
+          loadBookings();
+        } catch (error) {
+          setAlert("Unable to reach the backend. Please make sure the server is running.");
+        }
+      };
+
+      const editBooking = (id) => {
+        const updated = bookings.map((booking) => {
+          if (booking.id === id) {
+            return { ...booking, itemId: `${booking.itemId} (Updated)` };
+          }
+          return booking;
+        });
+        setBookings(updated);
+        setAlert("Booking updated locally.");
+      };
+
+      const Header = () => (
+        <header className="app-header" style={{ backgroundColor: agencyData.primary }}>
+          <div className="app-brand">
+            <span className="app-logo">{agencyData.logo}</span>
+            <div>
+              <h1>{agencyData.name}</h1>
+              <p>{agencyData.tagline}</p>
+            </div>
           </div>
-        ))}
+          <nav>
+            <button className={page === "dashboard" ? "nav-active" : ""} onClick={() => setPage("dashboard")}>Dashboard</button>
+            <button className={page === "flights" ? "nav-active" : ""} onClick={() => setPage("flights")}>Flights</button>
+            <button className={page === "hotels" ? "nav-active" : ""} onClick={() => setPage("hotels")}>Hotels</button>
+            <button className={page === "myBookings" ? "nav-active" : ""} onClick={loadBookings}>Bookings</button>
+          </nav>
+        </header>
+      );
 
-        <button onClick={() => setCurrentPage("dashboard")}>
-          Back
-        </button>
-      </div>
-    );
-  }
-
-  // CREATE BOOKING
-  async function createBooking(type, itemName, tickets, pets) {
-    const response = await fetch(
-      "http://localhost:5001/bookings",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId,
-          type,
-          itemName,
-          num_tickets: tickets ?? 1,
-          num_pets: pets ?? 0,
-        }),
+      if (!loggedIn) {
+        return (
+          <div className="App">
+            <Header />
+            <main className="app-main">
+              <section className="form-card">
+                <div className="form-header">
+                  <h2>Pet-Friendly Travel Login</h2>
+                  <p>Sign in or create a new account to manage your pet-friendly travel bookings.</p>
+                </div>
+                <div className="form-grid">
+                  <div>
+                    <h3>Login</h3>
+                    <label>
+                      Username
+                      <input value={loginUsername} onChange={(e) => setLoginUsername(e.target.value)} placeholder="Username" />
+                    </label>
+                    <label>
+                      Password
+                      <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="Password" />
+                    </label>
+                    <button className="button primary" onClick={handleLogin}>Login</button>
+                  </div>
+                  <div>
+                    <h3>Create Account</h3>
+                    <label>
+                      Username
+                      <input value={registerUsername} onChange={(e) => setRegisterUsername(e.target.value)} placeholder="Username" />
+                    </label>
+                    <label>
+                      Password
+                      <input type="password" value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} placeholder="Password" />
+                    </label>
+                    <label>
+                      Phone Number
+                      <input value={registerPhone} onChange={(e) => setRegisterPhone(e.target.value)} placeholder="Optional" />
+                    </label>
+                    <button className="button secondary" onClick={handleRegister}>Register</button>
+                  </div>
+                </div>
+                {message && <div className="alert">{message}</div>}
+              </section>
+            </main>
+          </div>
+        );
       }
-    );
 
-    const data = await response.json();
+      return (
+        <div className="App">
+          <Header />
+          <main className="app-main">
+            <section className="dashboard-card">
+              {message && <div className="alert">{message}</div>}
+              {page === "dashboard" && (
+                <>
+                  <h2>Welcome to your travel dashboard</h2>
+                  <p>Choose a booking path to search flights, hotels, or manage existing reservations.</p>
+                  <div className="button-row">
+                    <button className="button primary" onClick={() => setPage("flights")}>Book Flights</button>
+                    <button className="button primary" onClick={() => setPage("hotels")}>Search Hotels</button>
+                    <button className="button secondary" onClick={loadBookings}>My Bookings</button>
+                    <button className="button ghost" onClick={() => { setLoggedIn(false); setPage("login"); setMessage(""); }}>Logout</button>
+                  </div>
+                </>
+              )}
 
-    setMessage(data.message);
-  }
+              {page === "flights" && (
+                <>
+                  <div className="page-header">
+                    <h2>Search Pet-Friendly Flights</h2>
+                    <button className="button ghost" onClick={() => setPage("dashboard")}>Back to Dashboard</button>
+                  </div>
+                  <div className="search-grid">
+                    <label>
+                      Departure
+                      <input value={flightSearch.departure} onChange={(e) => setFlightSearch({ ...flightSearch, departure: e.target.value })} placeholder="San Jose" />
+                    </label>
+                    <label>
+                      Destination
+                      <input value={flightSearch.destination} onChange={(e) => setFlightSearch({ ...flightSearch, destination: e.target.value })} placeholder="New York" />
+                    </label>
+                    <label>
+                      Travel Date
+                      <input type="date" value={flightSearch.date} onChange={(e) => setFlightSearch({ ...flightSearch, date: e.target.value })} />
+                    </label>
+                  </div>
+                  <div className="listing-grid">
+                    {filteredFlights.map((flight) => (
+                      <article key={flight.id} className="listing-card">
+                        <div className="listing-title">{flight.departure} → {flight.destination}</div>
+                        <div className="listing-meta">{flight.date}</div>
+                        <button className="button primary" disabled={!flight.available} onClick={() => createBooking("Flight", `${flight.departure} to ${flight.destination}`)}>
+                          {flight.available ? "Book Flight" : "Sold Out"}
+                        </button>
+                      </article>
+                    ))}
+                    {!filteredFlights.length && <p className="empty-state">No flights match your search.</p>}
+                  </div>
+                </>
+              )}
 
-  // REGISTER
-  const handleRegister = async () => {
-    const response = await fetch(
-      "http://localhost:5001/auth/register",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: registerUsername,
-          password: registerPassword,
-          phone_number: registerPhone || undefined,
-        }),
-      }
-    );
+              {page === "hotels" && (
+                <>
+                  <div className="page-header">
+                    <h2>Search Pet-Friendly Hotels</h2>
+                    <button className="button ghost" onClick={() => setPage("dashboard")}>Back to Dashboard</button>
+                  </div>
+                  <div className="search-grid">
+                    <label>
+                      City
+                      <input value={hotelSearch.city} onChange={(e) => setHotelSearch({ ...hotelSearch, city: e.target.value })} placeholder="New York" />
+                    </label>
+                    <label>
+                      Attraction
+                      <input value={hotelSearch.attraction} onChange={(e) => setHotelSearch({ ...hotelSearch, attraction: e.target.value })} placeholder="Central Park" />
+                    </label>
+                    <label>
+                      Travel Date
+                      <input type="date" value={hotelSearch.date} onChange={(e) => setHotelSearch({ ...hotelSearch, date: e.target.value })} />
+                    </label>
+                  </div>
+                  <div className="listing-grid">
+                    {hotels.map((hotel) => (
+                      <article key={hotel.id} className="listing-card">
+                        <div className="listing-title">{hotel.hotelName}</div>
+                        <div className="listing-meta">{hotel.city} · Near {hotel.attraction}</div>
+                        <p>{hotel.petDetails}</p>
+                        <button className="button primary" disabled={!hotel.available} onClick={() => createBooking("Hotel", hotel.hotelName)}>
+                          {hotel.available ? "Book Hotel" : "Sold Out"}
+                        </button>
+                      </article>
+                    ))}
+                    {!hotels.length && <p className="empty-state">No hotels match your search.</p>}
+                  </div>
+                </>
+              )}
 
-    const data = await response.json();
-
-    setMessage(data.message || data.error);
-  };
-
-  // LOGIN
-  const handleLogin = async () => {
-    const response = await fetch(
-      "http://localhost:5001/auth/login",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: loginUsername,
-          password: loginPassword,
-        }),
-      }
-    );
-
-    const data = await response.json();
-
-    if (data.message === "Login successful") {
-      setLoggedIn(true);
-
-      setUserId(data.userId);
-
-      setCurrentPage("dashboard");
+              {page === "myBookings" && (
+                <>
+                  <div className="page-header">
+                    <h2>My Bookings</h2>
+                    <button className="button ghost" onClick={() => setPage("dashboard")}>Back to Dashboard</button>
+                  </div>
+                  {bookings.length === 0 ? (
+                    <div className="empty-state">No bookings found. Book a flight or hotel to get started.</div>
+                  ) : (
+                    <div className="listing-grid">
+                      {bookings.map((booking) => (
+                        <article key={booking.id} className="listing-card">
+                          <div className="listing-title">{booking.type}</div>
+                          <div className="listing-meta">{booking.itemId}</div>
+                          <div className="card-actions">
+                            <button className="button secondary" onClick={() => editBooking(booking.id)}>Edit</button>
+                            <button className="button ghost" onClick={() => deleteBooking(booking.id)}>Cancel</button>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
+          </main>
+        </div>
+      );
     }
 
-    setMessage(data.message || data.error);
-  };
-
-  // LOGOUT
-  const handleLogout = () => {
-    setLoggedIn(false);
-
-    setMessage("");
-
-    setLoginUsername("");
-    setLoginPassword("");
-  };
-
-  // LOAD BOOKINGS
-  const loadBookings = async () => {
-    const response = await fetch(
-      `http://localhost:5001/bookings/${userId}`
-    );
-
-    const data = await response.json();
-
-    setBookings(data);
-
-    setCurrentPage("myBookings");
-  };
-
-  //EDIT BOOKING — open inline editor
-  const editBooking = (booking) => {
-    setEditingId(booking.id);
-    setEditTickets(booking.num_tickets ?? 1);
-    setEditPets(booking.num_pets ?? 0);
-  };
-
-  // SAVE BOOKING EDIT
-  const saveBookingEdit = async (id) => {
-    try {
-      const response = await fetch(`http://localhost:5001/bookings/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ num_tickets: editTickets, num_pets: editPets }),
-      });
-
-      const data = await response.json();
-      setMessage(data.message || data.error || "");
-    } catch (err) {
-      setMessage("Failed to save — check that the backend server is running.");
-    } finally {
-      setEditingId(null);
-      await loadBookings();
-    }
-  };
-
-  // DELETE BOOKING
-  const deleteBooking = async (id) => {
-    await fetch(
-      `http://localhost:5001/bookings/${id}`,
-      {
-        method: "DELETE",
-      }
-    );
-
-    loadBookings();
-  };
-
-  // LOGIN PAGE
-  if (!loggedIn) {
-    return (
-      <div style={{ fontFamily: "Arial" }}>
-        <Header />
-        <div style={{ padding: "40px" }}>
-        <h1>Pet-Friendly Travel Booking</h1>
-
-        <p>{message}</p>
-
-        <h2>Login</h2>
-
-        <input
-          placeholder="Email"
-          value={loginUsername}
-          onChange={(e) => setLoginUsername(e.target.value)}
-        />
-
-        <br /><br />
-
-        <input
-          placeholder="Password"
-          type="password"
-          value={loginPassword}
-          onChange={(e) => setLoginPassword(e.target.value)}
-        />
-
-        <br /><br />
-
-        <button onClick={handleLogin}>Login</button>
-
-        <hr />
-
-        <h2>Create New Account</h2>
-
-        <input
-          placeholder="Email"
-          value={registerUsername}
-          onChange={(e) => setRegisterUsername(e.target.value)}
-        />
+    export default App;
 
         <br /><br />
 
@@ -755,40 +562,71 @@ function App() {
                 {flight.available ? "Book" : "Sold Out"}
               </button>
               <hr />
+=======
+        <main className="app-main">
+          <section className="form-card">
+            <div className="form-header">
+              <h2>Pet-Friendly Travel Login</h2>
+              <p>Sign in or create a new account to manage your pet-friendly travel bookings.</p>
+>>>>>>> 0385dab (Integrate hotel search with backend API and fixed date filter)
             </div>
-          ))}
-          <button onClick={() => setCurrentPage("dashboard")}>Back</button>
-        </div>
+            <div className="form-grid">
+              <div>
+                <h3>Login</h3>
+                <label>
+                  Username
+                  <input value={loginUsername} onChange={(e) => setLoginUsername(e.target.value)} placeholder="Username" />
+                </label>
+                <label>
+                  Password
+                  <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="Password" />
+                </label>
+                <button className="button primary" onClick={handleLogin}>Login</button>
+              </div>
+              <div>
+                <h3>Create Account</h3>
+                <label>
+                  Username
+                  <input value={registerUsername} onChange={(e) => setRegisterUsername(e.target.value)} placeholder="Username" />
+                </label>
+                <label>
+                  Password
+                  <input type="password" value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} placeholder="Password" />
+                </label>
+                <label>
+                  Phone Number
+                  <input value={registerPhone} onChange={(e) => setRegisterPhone(e.target.value)} placeholder="Optional" />
+                </label>
+                <button className="button secondary" onClick={handleRegister}>Register</button>
+              </div>
+            </div>
+            {message && <div className="alert">{message}</div>}
+          </section>
+        </main>
       </div>
     );
   }
 
-  // HOTELS PAGE
-  if (currentPage === "hotels") {
-    return (
-      <div style={{ fontFamily: "Arial" }}>
-        <Header />
-        <div style={{ padding: "40px" }}>
-          <h1>Pet-Friendly Hotels</h1>
-          {hotels.map((hotel) => (
-            <div key={hotel.id}>
-              <p>{hotel.hotelName}</p>
-              <p>Near: {hotel.attraction}</p>
-              <button
-                disabled={!hotel.available}
-                onClick={() => createBooking("Hotel", hotel.hotelName)}
-              >
-                {hotel.available ? "Book" : "Sold Out"}
-              </button>
-              <hr />
-            </div>
-          ))}
-          <button onClick={() => setCurrentPage("dashboard")}>Back</button>
-        </div>
-      </div>
-    );
-  }
+  return (
+    <div className="App">
+      <Header />
+      <main className="app-main">
+        <section className="dashboard-card">
+          {message && <div className="alert">{message}</div>}
+          {page === "dashboard" && (
+            <>
+              <h2>Welcome to your travel dashboard</h2>
+              <p>Choose a booking path to search flights, hotels, or manage existing reservations.</p>
+              <div className="button-row">
+                <button className="button primary" onClick={() => setPage("flights")}>Book Flights</button>
+                <button className="button primary" onClick={() => setPage("hotels")}>Search Hotels</button>
+                <button className="button secondary" onClick={loadBookings}>My Bookings</button>
+                <button className="button ghost" onClick={() => { setLoggedIn(false); setPage("login"); setMessage(""); }}>Logout</button>
+              </div>
+            </>
+          )}
 
+<<<<<<< HEAD
   // MY BOOKINGS PAGE
   if (currentPage === "myBookings") {
     return (
@@ -854,6 +692,107 @@ function App() {
       </div>
     );
   }
+=======
+          {page === "flights" && (
+            <>
+              <div className="page-header">
+                <h2>Search Pet-Friendly Flights</h2>
+                <button className="button ghost" onClick={() => setPage("dashboard")}>Back to Dashboard</button>
+              </div>
+              <div className="search-grid">
+                <label>
+                  Departure
+                  <input value={flightSearch.departure} onChange={(e) => setFlightSearch({ ...flightSearch, departure: e.target.value })} placeholder="San Jose" />
+                </label>
+                <label>
+                  Destination
+                  <input value={flightSearch.destination} onChange={(e) => setFlightSearch({ ...flightSearch, destination: e.target.value })} placeholder="New York" />
+                </label>
+                <label>
+                  Travel Date
+                  <input type="date" value={flightSearch.date} onChange={(e) => setFlightSearch({ ...flightSearch, date: e.target.value })} />
+                </label>
+              </div>
+              <div className="listing-grid">
+                {filteredFlights.map((flight) => (
+                  <article key={flight.id} className="listing-card">
+                    <div className="listing-title">{flight.departure} → {flight.destination}</div>
+                    <div className="listing-meta">{flight.date}</div>
+                    <button className="button primary" disabled={!flight.available} onClick={() => createBooking("Flight", `${flight.departure} to ${flight.destination}`)}>
+                      {flight.available ? "Book Flight" : "Sold Out"}
+                    </button>
+                  </article>
+                ))}
+                {!filteredFlights.length && <p className="empty-state">No flights match your search.</p>}
+              </div>
+            </>
+          )}
+
+          {page === "hotels" && (
+            <>
+              <div className="page-header">
+                <h2>Search Pet-Friendly Hotels</h2>
+                <button className="button ghost" onClick={() => setPage("dashboard")}>Back to Dashboard</button>
+              </div>
+              <div className="search-grid">
+                <label>
+                  City
+                  <input value={hotelSearch.city} onChange={(e) => setHotelSearch({ ...hotelSearch, city: e.target.value })} placeholder="New York" />
+                </label>
+                <label>
+                  Attraction
+                  <input value={hotelSearch.attraction} onChange={(e) => setHotelSearch({ ...hotelSearch, attraction: e.target.value })} placeholder="Central Park" />
+                </label>
+                <label>
+                  Travel Date
+                  <input type="date" value={hotelSearch.date} onChange={(e) => setHotelSearch({ ...hotelSearch, date: e.target.value })} />
+                </label>
+              </div>
+              <div className="listing-grid">
+                {hotels.map((hotel) => (
+                  <article key={hotel.id} className="listing-card">
+                    <div className="listing-title">{hotel.hotelName}</div>
+                    <div className="listing-meta">{hotel.city} · Near {hotel.attraction}</div>
+                    <p>{hotel.petDetails}</p>
+                    <button className="button primary" disabled={!hotel.available} onClick={() => createBooking("Hotel", hotel.hotelName)}>
+                      {hotel.available ? "Book Hotel" : "Sold Out"}
+                    </button>
+                  </article>
+                ))}
+                {!hotels.length && <p className="empty-state">No hotels match your search.</p>}
+              </div>
+            </>
+          )}
+
+          {page === "myBookings" && (
+            <>
+              <div className="page-header">
+                <h2>My Bookings</h2>
+                <button className="button ghost" onClick={() => setPage("dashboard")}>Back to Dashboard</button>
+              </div>
+              {bookings.length === 0 ? (
+                <div className="empty-state">No bookings found. Book a flight or hotel to get started.</div>
+              ) : (
+                <div className="listing-grid">
+                  {bookings.map((booking) => (
+                    <article key={booking.id} className="listing-card">
+                      <div className="listing-title">{booking.type}</div>
+                      <div className="listing-meta">{booking.itemId}</div>
+                      <div className="card-actions">
+                        <button className="button secondary" onClick={() => editBooking(booking.id)}>Edit</button>
+                        <button className="button ghost" onClick={() => deleteBooking(booking.id)}>Cancel</button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </section>
+      </main>
+    </div>
+  );
+>>>>>>> 0385dab (Integrate hotel search with backend API and fixed date filter)
 }
 
 export default App;
