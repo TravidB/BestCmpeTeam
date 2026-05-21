@@ -6,7 +6,7 @@ const router = express.Router();
 
 // REGISTER
 router.post("/register", async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, first_name, last_name, phone_number } = req.body;
 
   if (!username || !password) {
     return res.status(400).json({
@@ -18,8 +18,8 @@ router.post("/register", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     db.run(
-      `INSERT INTO users (username, password) VALUES (?, ?)`,
-      [username, hashedPassword],
+      `INSERT INTO users (username, password, first_name, last_name, phone_number) VALUES (?, ?, ?, ?, ?)`,
+      [username, hashedPassword, first_name || null, last_name || null, phone_number || null],
       function (err) {
         if (err) {
           return res.status(500).json({

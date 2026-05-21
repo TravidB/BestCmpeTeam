@@ -14,9 +14,15 @@ db.serialize(() => {
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE,
-      password TEXT
+      password TEXT,
+      first_name TEXT,
+      last_name TEXT,
+      phone_number TEXT
     )
   `);
+  db.run(`ALTER TABLE users ADD COLUMN first_name TEXT`, () => {});
+  db.run(`ALTER TABLE users ADD COLUMN last_name TEXT`, () => {});
+  db.run(`ALTER TABLE users ADD COLUMN phone_number TEXT`, () => {});
 
   // Flights table
   db.run(`

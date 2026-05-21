@@ -6,6 +6,7 @@ function App() {
 
   const [registerUsername, setRegisterUsername] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
+  const [registerPhone, setRegisterPhone] = useState("");
 
   const [message, setMessage] = useState("");
 
@@ -462,6 +463,7 @@ function App() {
         body: JSON.stringify({
           username: registerUsername,
           password: registerPassword,
+          phone_number: registerPhone || undefined,
         }),
       }
     );
@@ -564,7 +566,7 @@ function App() {
         <h2>Login</h2>
 
         <input
-          placeholder="Username"
+          placeholder="Email"
           value={loginUsername}
           onChange={(e) => setLoginUsername(e.target.value)}
         />
@@ -587,7 +589,7 @@ function App() {
         <h2>Create New Account</h2>
 
         <input
-          placeholder="New Username"
+          placeholder="Email"
           value={registerUsername}
           onChange={(e) => setRegisterUsername(e.target.value)}
         />
@@ -599,6 +601,14 @@ function App() {
           type="password"
           value={registerPassword}
           onChange={(e) => setRegisterPassword(e.target.value)}
+        />
+
+        <br /><br />
+
+        <input
+          placeholder="Phone Number (optional)"
+          value={registerPhone}
+          onChange={(e) => setRegisterPhone(e.target.value)}
         />
 
         <br /><br />
