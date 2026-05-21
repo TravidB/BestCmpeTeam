@@ -57,7 +57,7 @@ The system demonstrates frontend/backend integration, CRUD operations, authentic
 - Pet-friendly accommodation services
 - Dynamic hotel filtering
 
-<img src="screenshots/Screenshot%202026-05-20%20at%2012.24.11%20AM.png" width="500">
+<img src="screenshots/Screenshot%202026-05-20%20at%2012.24.11%E2%80%AFAM.png" width="500">
 <img src="screenshots/book_hotel.png" width="500">
 
 - Full hotel list can be viewed on the webpage. Only partial section is shown for space consideration.
