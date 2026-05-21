@@ -14,6 +14,8 @@ const HOTELS = [
     description: "A cozy pet-friendly hotel that welcomes large dogs with open paws.",
     roomTypes: ["Standard Suite", "Pet Family Suite"],
     nearbyPark: "Willow Glen Park",
+    Price: 150,
+    Rate: 4.5,
   },
   {
     id: 2,
@@ -27,6 +29,8 @@ const HOTELS = [
     description: "Located near the park, this hotel makes walking and dining with your dog easy.",
     roomTypes: ["City View Room", "Pet Premium Room"],
     nearbyPark: "Golden Gate Park",
+    Price: 200,
+    Rate: 4.0, 
   },
   {
     id: 3,
@@ -40,6 +44,8 @@ const HOTELS = [
     description: "A calm urban hotel with dedicated pet care amenities and nearby walking paths.",
     roomTypes: ["Standard", "Deluxe Pet Suite"],
     nearbyPark: "Discovery Park",
+    Price: 120,
+    Rate: 3.8,
   },
   {
     id: 4,
@@ -53,6 +59,8 @@ const HOTELS = [
     description: "A popular choice among active pet owners with access to nearby trails.",
     roomTypes: ["Trail View Room", "Pet Playroom Suite"],
     nearbyPark: "Zilker Park",
+    Price: 180,
+    Rate: 4.2,
   },
   {
     id: 5,
@@ -66,6 +74,8 @@ const HOTELS = [
     description: "Beachside hotel with pet-friendly food offerings and a walkable park nearby.",
     roomTypes: ["Ocean View", "Pet Luxury Suite"],
     nearbyPark: "Bayside Park",
+    Price: 250,
+    Rate: 4.7,
   },
 ];
 
@@ -93,6 +103,9 @@ router.get("/", (req, res) => {
   const city = (req.query.city || "").toLowerCase();
   const attraction = (req.query.attraction || "").toLowerCase();
   const date = (req.query.date || "").toLowerCase();
+  const minPrice = req.query.minPrice ? Number(req.query.minPrice) : null;
+  const maxPrice = req.query.maxPrice ? Number(req.query.maxPrice) : null;
+  const minRating = req.query.minRating ? Number(req.query.minRating) : null;
 
   const filtered = HOTELS.filter((hotel) => {
     const matchesDate = !date || hotel.date.toLowerCase() === date;
@@ -101,7 +114,10 @@ router.get("/", (req, res) => {
       hotel.petFriendly &&
       hotel.city.toLowerCase().includes(city) &&
       hotel.attraction.toLowerCase().includes(attraction) &&
-      matchesDate
+      matchesDate &&
+      (!minPrice || hotel.price >= minPrice) &&
+      (!maxPrice || hotel.price <= maxPrice) &&
+      (!minRating || hotel.rating >= minRating)
     );
   });
 
