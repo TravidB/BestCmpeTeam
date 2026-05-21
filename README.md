@@ -43,6 +43,9 @@ The system demonstrates frontend/backend integration, CRUD operations, authentic
 - Booking creation
 
 <img src="screenshots/book_flight.png" width="500">
+
+- Full flight list can be viewed on the webpage. Only partial section is shown for space consideration.
+
 <img src="screenshots/book_success.png" width="500">
 
 ## Hotel Booking
@@ -54,6 +57,9 @@ The system demonstrates frontend/backend integration, CRUD operations, authentic
 - Dynamic hotel filtering
 
 <img src="screenshots/book_hotel.png" width="500">
+
+- Full flight list can be viewed on the webpage. Only partial section is shown for space consideration.
+
 <img src="screenshots/book_hotel2.png" width="500">
 <img src="screenshots/hotel_success.png" width="500">
 
@@ -198,6 +204,6 @@ Potential future improvements include:
 - Vincent Nguyen 
 - Lucia Lu
 
-## Data 
+## Date
 
-05/20/2026 
+05/21/2026 
