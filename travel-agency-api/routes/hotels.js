@@ -125,11 +125,11 @@ router.get("/", (req, res) => {
   });
   if (sortBy === "price_asc") {
     filtered.sort((a, b) => a.price - b.price);
-}   else if (sortBy === "price_desc") {
+  } else if (sortBy === "price_desc") {
     filtered.sort((a, b) => b.price - a.price);
-}.  else if (sortBy === "rating_desc") {
+  } else if (sortBy === "rating_desc") {
     filtered.sort((a, b) => b.rating - a.rating);
-}
+  }
 
   res.json(filtered);
 });
