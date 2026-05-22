@@ -52,6 +52,30 @@ function App() {
   const [editTickets, setEditTickets] = useState(1);
   const [editPets, setEditPets] = useState(0);
 
+  const handlePayment = async (bookingId, amount) => {
+    try {
+      const response = await fetch(`${API_BASE}/payments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          booking_id: bookingId,
+          user_id: userId,
+          amount: amount,
+          payment_method: "Credit Card"
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert("Payment Successful! ID: " + data.payment_id);
+      } else {
+        alert("Payment Failed: " + data.error);
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      alert("Payment Error! Check server.");
+    }
+  };
+
   const agencyData = AGENCIES[agency];
 
   useEffect(() => {
@@ -433,7 +457,8 @@ function App() {
                           </div>
                           <div className="card-actions">
                             <button className="button secondary" onClick={() => editBooking(booking)}>Edit</button>
-                            <button className="button ghost" onClick={() => deleteBooking(booking.id)}>Cancel</button>
+                            <button className="button ghost" onClick={() => deleteBooking(booking.id)}>Cancel</button> 
+			    <button className="button primary" onClick={() => handlePayment(booking.id, 50.00)} style={{marginLeft: "10px", backgroundColor: "#0f766e", color: "white"}}>Pay Now</button>
                           </div>
                         </>
                       )}
