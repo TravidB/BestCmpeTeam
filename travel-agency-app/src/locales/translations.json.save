@@ -1,0 +1,50 @@
+{
+  "en": {
+    "booking": "Bookings",
+    "login": "Login",
+    "payment_success": "Payment Successful!",
+    "payment_fail": "Payment Failed. Please try again.",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "pay_now": "Pay Now",
+    "welcome": "Welcome to Best Travel Agency",
+    "search_hotels": "Search Hotels",
+    "search_flights": "Search Flights"
+  },
+  "ko": {
+    "booking": "예약 내역",
+    "login": "로그인",
+    "payment_success": "결제가 성공적으로 완료되었습니다!",
+    "payment_fail": "결제에 실패했습니다. 다시 시도해주세요.",
+    "cancel": "취소",
+    "edit": "수정",
+    "pay_now": "지금 결제하기",
+    "welcome": "최고의 여행사에 오신 것을 환영합니다",
+    "search_hotels": "호텔 검색",
+    "search_flights": "항공권 검색"
+  },
+  "es": {
+    "booking": "Reservas",
+    "login": "Iniciar sesión",
+    "payment_success": "¡Pago exitoso!",
+    "payment_fail": "Pago fallido. Inténtalo de nuevo.",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "pay_now": "Pagar ahora",
+    "welcome": "Bienvenido a la mejor agencia de viajes",
+    "search_hotels": "Buscar hoteles",
+    "search_flights": "Buscar vuelos"
+  },
+  "fr": {
+    "booking": "Réservations",
+    "login": "Connexion",
+    "payment_success": "Paiement réussi !",
+    "payment_fail": "Échec du paiement. Veuillez réessayer.",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "pay_now": "Payer maintenant",
+    "welcome": "Bienvenue dans la meilleure agence de voyage",
+    "search_hotels": "Rechercher des hôtels",
+    "search_flights": "Rechercher des vols"
+  }
+

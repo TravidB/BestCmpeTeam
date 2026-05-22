@@ -1,0 +1,62 @@
+{
+  "en": {
+    "booking": "Bookings",
+    "login": "Login",
+    "payment_success": "Payment Successful!",
+    "payment_fail": "Payment Failed. Please try again.",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "pay_now": "Pay Now",
+    "welcome": "Welcome to Best Travel Agency",
+    "search_hotels": "Search Hotels",
+    "search_flights": "Search Flights"
+  },
+  "de": {
+    "booking": "Buchungen",
+    "login": "Anmelden",
+    "payment_success": "Zahlung erfolgreich!",
+    "payment_fail": "Zahlung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "cancel": "Stornieren",
+    "edit": "Bearbeiten",
+    "pay_now": "Jetzt bezahlen",
+    "welcome": "Willkommen im besten Reisebuero",
+    "search_hotels": "Hotels suchen",
+    "search_flights": "Fluege suchen"
+  },
+  "es": {
+    "booking": "Reservas",
+    "login": "Iniciar sesion",
+    "payment_success": "Pago exitoso!",
+    "payment_fail": "Pago fallido. Intentalo de nuevo.",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "pay_now": "Pagar ahora",
+    "welcome": "Bienvenido a la mejor agencia de viajes",
+    "search_hotels": "Buscar hoteles",
+    "search_flights": "Buscar vuelos"
+  },
+  "fr": {
+    "booking": "Reservations",
+    "login": "Connexion",
+    "payment_success": "Paiement reussi !",
+    "payment_fail": "Echec du paiement. Veuillez reessayer.",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "pay_now": "Payer maintenant",
+    "welcome": "Bienvenue dans la meilleure agence de voyage",
+    "search_hotels": "Rechercher des hotels",
+    "search_flights": "Rechercher des vols"
+  },
+  "it": {
+    "booking": "Prenotazioni",
+    "login": "Accesso",
+    "payment_success": "Pagamento riuscito!",
+    "payment_fail": "Pagamento fallito. Riprova.",
+    "cancel": "Annulla",
+    "edit": "Modifica",
+    "pay_now": "Paga ora",
+    "welcome": "Benvenuti nella migliore agenzia di viaggi",
+    "search_hotels": "Cerca hotel",
+    "search_flights": "Cerca voli"
+  }
+}

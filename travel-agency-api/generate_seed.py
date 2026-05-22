@@ -15,7 +15,7 @@ for i in range(1, 501):
     sql += f"('Grand Hotel {i}', '{city}', {price}, {rating}){end_char}\n"
 
 sql += "\nINSERT INTO flights (departure, destination, date, price) VALUES\n"
-for i in range(1, 501):
+for i in range(1, 1501):
     dep = cities[i % len(cities)]
     dest = cities[(i+1) % len(cities)]
     price = round(random.uniform(100.0, 500.0), 2)
